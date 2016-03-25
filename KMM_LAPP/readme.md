@@ -1,2 +1,1 @@
-Examples and excercises for a great book:
-Kevin P. Murphy - Machine Learning A Probabilistic Perspective
+Examples and excercises for a great book: [Kevin P. Murphy - Machine Learning A Probabilistic Perspective](http://www.amazon.com/Machine-Learning-Probabilistic-Perspective-Computation/dp/0262018020?ie=UTF8&keywords=kevin%20murphy%20machine%20learning&qid=1458871054&ref_=sr_1_1&s=books&sr=1-1)
