@@ -1,0 +1,107 @@
+---
+title: "Bayesian Concept Learning"
+author: "omikad"
+date: "April 4, 2016"
+output: html_document
+---
+
+```{r echo=FALSE, results='hide'}
+library(ggplot2)
+library(knitr)
+opts_chunk$set(echo=FALSE)
+```
+
+Hypothesis data consists of the following colummns:
+
+- hypothesis: name of hypothesys
+
+- prior.score: subjective value for hypotheseses. Lower value for "conceptually unnatural" prior
+
+- prior: weighted prior.score
+
+- expression: R expression to generate hypothesis values
+
+- size: number of elements in hypothesis set
+
+```{r}
+hyps <- read.csv("hypothesis.csv", sep=";")
+
+hyps$expression <- as.character(hyps$expression)
+
+hyps$prior <- hyps$prior.score / sum(hyps$prior.score)
+
+hyps$hypothesis <- factor(hyps$hypothesis, levels=rev(hyps$hypothesis))
+
+hyps.set <- list()
+for (i in 1:nrow(hyps)) {
+  items <- eval(parse(text=hyps$expression[i]))
+  hyps.set[[i]] <- items
+  hyps$size[i] = length(items)
+}
+
+isInHypothesis <- function(x) {
+  unlist(lapply(hyps.set, function(s){ all(x %in% s) }))
+}
+
+print(hyps)
+```
+
+Priors:
+
+```{r}
+ggplot(hyps, aes(x=hypothesis, y=prior)) + 
+  ylim(0, 0.2) + 
+  geom_bar(stat="identity") + 
+  coord_flip() + 
+  theme(panel.background=element_blank())
+```
+
+After observation of {16} we get likelihood:
+
+```{r}
+hyps$likelihood <- 1 / hyps$size * isInHypothesis(16)
+
+ggplot(hyps, aes(x=hypothesis, y=likelihood)) + 
+  ylim(0, 0.4) + 
+  geom_bar(stat="identity") + 
+  coord_flip() + 
+  theme(panel.background=element_blank())
+```
+
+And posterior:
+
+```{r}
+hyps$posterior <- hyps$prior * hyps$likelihood
+hyps$posterior <- hyps$posterior / sum(hyps$posterior)
+
+ggplot(hyps, aes(x=hypothesis, y=posterior)) + 
+  ylim(0, 0.4) + 
+  geom_bar(stat="identity") + 
+  coord_flip() + 
+  theme(panel.background=element_blank())
+```
+
+
+After observation of {16,8,2,64} we get likelihood:
+
+```{r}
+d <- c(16,8,2,64)
+hyps$likelihood <- 1 / (hyps$size ^ length(d)) * isInHypothesis(d)
+
+ggplot(hyps, aes(x=hypothesis, y=likelihood)) +  
+  geom_bar(stat="identity") + 
+  coord_flip() + 
+  theme(panel.background=element_blank())
+```
+
+And posterior:
+
+```{r}
+hyps$posterior <- hyps$prior * hyps$likelihood
+hyps$posterior <- hyps$posterior / sum(hyps$posterior)
+
+ggplot(hyps, aes(x=hypothesis, y=posterior)) + 
+  geom_bar(stat="identity") + 
+  coord_flip() + 
+  theme(panel.background=element_blank())
+```
