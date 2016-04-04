@@ -2,7 +2,9 @@
 title: "Bayesian Concept Learning"
 author: "omikad"
 date: "April 4, 2016"
-output: html_document
+output: 
+  html_document:
+    keep_md: true
 ---
 
 ```{r echo=FALSE, results='hide'}
