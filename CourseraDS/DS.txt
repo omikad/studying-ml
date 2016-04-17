@@ -1,0 +1,560 @@
+~~~~~~~~~~~~~~~ SWIRL
+R-Programming: +1,2,3
+Getting and Cleaning Data: 
+Exploratory Data: +1,2,3,4,5,6,7,8,9,10,12,13,14   -15
+	
+	
+	
+~~~~~~~~~~~~~~~ I. Data Science's Toolbox
+
+R help about methods:
+	?rnorm
+	?`:`
+	help(package = lubridate)
+	help.search("rnorm")
+	args("rnorm")
+	
+CRAN - Comprehensive (всеобъемлющий) R Archive Network
+
+a <- available.packages()
+head(rownames(a), 3)
+
+install.packages("slidify")		// установить на комп
+library(ggplot2)				// использовать в проге
+search()						// показывает доступные функции
+
+для винды нужны devtools:
+install.packages("devtools")
+library(devtools)
+find_rtools()
+
+Types of Data Science questions:
+	Descriptive	- просто описание
+	Exploratory - поиск корелляций (не факт что причинности, просто корелляции)
+	Inferential - по малому объему данных сказать что-нибудь о большом
+	Predictive - по X предсказать Y (не факт что есть причинность между ними)
+	Causal - найти что будет с одной переменной, если другую переменную изменить
+		Используется randomized studies
+	Mechanistic - понять точное изменение в переменных которые ведут к изменению в других переменных (множество уравнений)
+	
+Most important things: 1) Question 2) Data
+
+figshare.com
+jtleek : how to share data with a statistican
+
+Prediction key quantities:
+	Pr( positive test | disease ) = Sensitivity
+	Pr( negative test | no disease ) = Specificity
+	Pr( disease | positive test ) = Positive Predictive Value
+	Pr( no disease | negative test ) = Negative Predictive Value
+	Pr( correct outcome ) = Accuracy
+	
+Data dredging - при попытке найти объясняющие фичи происходит ошибка слишком сильного углубления в детали. То есть, из всего множества признаков выбирается тот, который объясняет что-нибудь очень хорошо. Но если множество всех признаков широко, то с большой вероятностью можно будет найти именно тот, который объясняет ситуацию очень хорошо, но по случайности
+
+
+
+
+~~~~~~~~~~~~~~~ II. R Programming
+
+getwd() # get working directory
+
+ls() # list of objects
+
+Get attributes of object: attributes(x)
+
+str(read.table) # быстрая помощь по методу
+str(table) # показывает колонки с типами и с выборкой данных
+
+library(xtable)
+xtable(summary(fit))
+
+source("file.R") # подгрузить сурс с кодом
+
+<- # assigning operator
+
+# - comment
+
+print(x) # explicit print variable
+x # implicit print call
+[1] 5 #x is a vector of 1 element
+
+1:20  #: is sequence operator
+
+Atomic Objects:
+	character
+	numeric (real numbers)
+	integer
+	complex
+	logical (True/False)
+	
+Numbers: 1 - real
+		 1L - integer
+		 
+Create vectors: concatenate function c(1, 2, 3), c(TRUE, FALSE), c(T, F)
+				vector("numeric", length = 10)
+				
+Vector can have items of one type
+List can have items of different types. Function list()
+
+Matrix: matrix(nrow=2, ncol=3)
+		matrix(1:6, nrow=2, ncol=3)
+		matrix from a vector:
+			m <- 1:10
+			dim(m) <- c(2, 5)
+		matrix from column-binding and row-binding:
+			x <- 1:3
+			y <- 10:12
+			cbind(x, y)
+			rbind(x, y)
+			
+Factors: integer vector where each integer has label. To create: lm(), glm()
+		x <- factor(c("yes", "yes", "no", "yes", "no")   #x [1] yes yes no yes no, Levels: no, yes
+		table(x)
+		unclass(x)
+		Уровни ставятся по алфавиту
+		Factors indicate subsets of data
+		
+Missing variables: is.na(), is.nan()
+		NaN - underfined mathematical operations, NA - anything else
+		x <- NA  # is.na() TRUE, is.nan() FALSE, means missing, not a undefined result
+		x <- NaN # is.na() TRUE, is.nan() TRUE,  means underined result, also missing
+		
+Data frames: list, where every element has the same length. Like matrix, each col has same lenght. But can contain different types of objects in each column
+		row.names, read.table(), read.csv(), data.matrix()
+		x <- data.frame(foo = 1:4, bar = c(T, T, F, F))
+		
+Names:  x <- 1:3
+		names(x) <- c("foo", "bar", "norf")
+		list(a = 1, b = 2, c = 3)
+		m <- matrix(1:4, nrow=2, ncol=2); dimnames(x) <- list(c("a", "b"), c("c", "d"))
+		
+Read big datafile:
+		initial <- read.table("ddd.txt", nrows = 100)
+		classes <- sapply(initial, class)
+		tabAll <- read.table("ddd.txt", colClasses = classes)
+	R займет примерно в 2 раза больше памяти, чем если прикинуть численно
+	
+Textual formats: dump, dput
+
+Subsets:
+	[	extract same object as original (exception: matrix with 2 dims, x[1,2] -> returns vector of a single element
+																		x[1,] -> return vector
+																		use drop=FALSE to supress this)
+	[[	extract of a list, dataframe
+	$	extract of a list, dataframe by name
+	
+	x <- list(a = list(10, 11, 12), b = (13, 14, 15))
+	x[[c(1, 3]] == x[[1]][[3]] == 12
+	
+	matrix: x[rowindex, colindex]
+	
+	partial matching (for [[ and $):
+		x <- list(aadd = 1:5)
+		x$a # works!
+		x[["a"]] # NULL
+		x[["a", exact = FALSE]] # works!
+		
+Removing NA values:
+	x <- c(1, 2, NA, 4, NA, 6)
+	bad <- is.na(x)
+	x[!bad]
+	complete.cases()
+	
+Control structures: if, else, for, while, repeat, break, next, return
+	for (i in 1:10) {...}
+	seq_along()
+	
+В R-Studio можно выполнять кусок текста!
+
+search() - показывает список источников функций, в порядке приоритета
+environment() - показывает переменные, включая захваченные в closure
+
+tapply(X, INDEX, FUN) - берет данные X, в INDEX (той же длины что и X) лежат факторы, каждый фактор образует группу в X, по каждой группе считается функция
+
+traceback() - показать стектрейс последней ошибки
+debug(FUN) - указать что при выполнении этой функции надо вызвать отладку
+
+str() - compactly display the internal structure of object
+summary() - summary !
+quantile()
+table() - агрегирует вход
+	table(data$zipcode %in% c("21212", "21213"))
+
+Generating random numbers:, rnorm, rpois, rbinom. Prefixes: r (random), p (cumulative), d (density), q (quantile)
+
+sample() - draws randomly from a set (случайные выборки)
+
+Profiling:
+	user time: cpu time spent on task
+	elapsed time: time on "wall clock" in your room
+		cpu wait => user < elapsed
+		multicores => user > elapsed
+	system.time()
+	Rprof(), summaryRprof() - sampling (interval 0.02sec)
+	
+	
+	
+~~~~~~~~~~~~~~~ III. Getting and Cleaning Data
+	
+download.file("url", mode="wb", destfile = "out.xml")
+	
+data.table - крутая штука, как data frame, но круче
+	DT[c(2,3), ] - выбирает колонки
+	DT[, list(mean(x), sum(z))] - выполняет функции mean над колонкой x, и sum над колонкой z
+	DT[, w:=z^2] - добавляет новую колонку, как квадрат колонки z
+	DT[, m:={ tmp <- x + z; log2(tmp + 5) }]
+	DT[, b:=mean(x+w), by=a] - группирует строки по a, и в каждой группе считает mean(x+w) и создает колонку b
+	DT[, .N, by=x] - .N - количество элементов в группе
+	setkey(DT, x); merge(DT1, DT2)
+	
+dplyr - работа с данными. Плюс, может коннектится и работать удаленно с SQL
+
+X[(X$var1 <= 3 | X$var2 >= 11),]
+X[which(X$var > 8)],  # which returns indices
+sort(x, na.last=TRUE) # если есть na, то они будут последними в сортировке
+X[order(X$var1),] # отсортирует X по колонке va1 . plyr libary: arrange(X, var1)
+X$newcolumn <- rnorm(5) # добавить колонку, или: Y <- cbind(X, rnorm(5))
+
+cross tabs: xtabs(Freq ~ Gender + Admit, data = DF) # создает табличку по формуле
+
+Первое что хорошо сделать с данными - создать индекс:
+	seq() - создает последовательность
+	dt$zipWrong = ifelse(dt$zip < 0, TRUE, FALSE).
+	Посмотреть результаты этого действия - table(dt$zipWrong, dt$zip < 0)
+	Создать кластеры по квантилям:
+		dt$zipGroups = cut(dt$zip, breaks=quantile(dt$zip)); table(dt$zipGroups, dt$zip)
+		или: library(Hmisc); dt$zipGroups = cut2(dt$zip, g=4)
+		
+reshaping data: library(reshape2)
+	melting: carMelt <- melt(mtcars, id=c("carname", "gear", "cyl"), measure.vars=c("mpg", "hp"))
+	casting: cylData <- dcast(carMelt, cyl ~ variable)
+		показывает количество каждого variable по каждому cyl
+		количество можно заменить на другую функцию		
+	tapply(dt$count, dt$spray, sum) - для каждого разного spray, берет sum(всех count этого spray)
+	другой способ: split -> apply -> combine:
+		split: split(dt$count, dt$spray) - создаст лист, каждый элемент это spray, содержимое вектор из count
+		apply: lapply(splitted, sum) - каждый элемент листа свернет в sum
+		combine: unlist(dataafterapply) - обратно в дата фрейм
+		последние два шага можно сделать сразу вместе: sapply(splitted, sum)
+	другой способ, через plyr:
+		ddply(dt, .(spray), summarize, sum=sum(count))
+	создать новую колонку в дате, которая равна агрегату:
+		newcol <- ddply(dt, .(spray), summarize=ave(count, FUN=sum))
+		
+dplyr:
+	select - returns subset of columns
+	filter - extracts subset of rows
+	arrange - reorder rows
+	rename - rename variables
+	mutate - add/transform variables and columns
+	summarize - generates summary, хорошо использовать после group_by
+	print - prints nicely
+	
+	chicago <- mutate(chicago, tempcat=factor(1*(tmpd > 80), labels=c("cold", "hot")));
+		group_by(chicago, tempcat)
+		
+	chicago %>% mutate(month=...) %>% group_by(month) %>% summarize(...)
+
+Merge:
+	merge(reviews, solutions, by.x="solution_id", by.y="id", all=TRUE)
+	plyr: join
+
+library tidyr:
+	gather - если в именах колонок есть информация, то эта команда делает строки из колонок
+	separate - разделяет колонку на несколько. По умолчанию разбирает содержимое по non-alphanumeric
+	spread - превращает значения выбранной колонки в колонки
+	
+extract_numeric
+bind_rows
+
+editing text: tolower, toupper, strsplit, sub (=replace substrings), gsub, grep, grepl
+	library(stringr): nchar, substr, paste, paste0, str_trim
+dates: date(), Sys.Date(), as.Date(), Sys.timezone(), POSIXlt, POSIXct	
+	library(lubridate); ymd, mdy, dmy, ymd_hms, update(dt, hours = 8)
+	
+заменить цифру по словарю: match(dataSet$activity$activity, activityNames$code)
+
+
+
+
+~~~~~~~~~~~~~~~ IV. Exploratory Data Analysis
+
+Exploratory graph - графики которые мы делаем для себя в процессе изучения и отладки скрипта
+
+Boxplot - показывает минимум, 1 квантиль, медиану, 2 квантиль, максимум
+	IQR - interquartile range - расстояние от Q1 до Q3
+	Boxplot показывает outlier как кружочки, это те элементы, которые > Q3 + 1.5*IQR или < Q1 - 1.5* IQR
+	upper whisker = min(max(x), Q_3 + 1.5 * IQR)  - whisker это усы
+	lower whisker = max(min(x), Q_1 – 1.5 * IQR)
+
+Principles of Analytic Graphics:
+	1. Show comparisons, always ask "Compared to what?"
+	2. Show causality, make explanation
+	3. Show multivariate data (больше чем 2 переменные)
+	4. Integration of evidence (напихать побольше всего интересного)
+	5. Descibe with labels, scales, sources, etc
+	6. Content is a king
+	
+Парадокс Симпсона:
+	Общий график отношения числа смертей к концентрации пыли - легкий негативный тренд - меньше смертей к больше концентрации. Однако, если разбить этот график по сезонам (зима, весна, лето, осень), то в каждом графике будет легкий позитивиный тренд - больше смертей к больше концентрации
+
+Simple Summaries of Data:
+	One dimension:
+		Five-number summary: summary()
+		Boxplots: boxplot()
+		Histograms: hist(x, breaks=100) - сразу после hist(x) можно написать rug(x)
+		Density plot
+		Barplot: barplot(table(x), col="wheat", main="lalala")
+		
+	просто линия: abline(h=12), abline(v=median(x), lwd=2)
+
+	Two dimensions:
+		Multiple/overlayed 1-D plots (Lattice/ggplot2):
+			boxplot(x ~ y, data = d, col="red")			
+			par(mfrow=c(2, 1), mar=c(4,4,2,1)); hist(subset(x, y==z)); hist(subset(x, y==k))		
+		Scatterplots:
+			with(x, plot(y, z), col=k)
+		Smooth scatterplots
+	
+	> Two dimensions:
+		Overlayed/multiple 2-D plots; coplots
+		Use color/shape/size to add dimensions
+		Spinning plots
+		Actual 3D plots (not that useful)
+
+	погуглить - r graph gallery
+		
+	mean(is.na(x1)) - какой процент колонки составляют пропущенные значения
+	
+	fit <- lm(Ozone ~ Wind + Solar.R + Temp)
+	summary(fit)
+
+Plotting systems:
+	Base: (старый подход) сначала пишем plot (или аналог), потом другими методами добавляем информацию
+		?par - метод для установки параметров графики
+		функции - plot, lines, points, text, title, mtext, axis
+		with (data, {plot(x, y); plot(m, n)})
+		example("points") - демка для points
+		legend("topleft", legend="data", pch=20)
+		x <- rnorm(100); y <- rnorm(100); fit <- lm(y ~ x); plot(x, y); abline(fit)
+		boxplot(pm25 ~ region, data=pollution, col="red") - выводит зависимость и строит boxplot
+		чтобы сделать график пустым, а потом накидывать точки: plot(..., type="n"); points(x[g==0], y[g==0], col="green")
+		par(mfrow=c(2,2)) - несколько графиков решеткой
+		
+		График показывающий как некие значения датчиков изменились во времени - две точки времени и 52 датчика:
+		with(mrg, plot(rep(1,52), mrg[,2], xlim=c(.5, 2.5)))  # первый столбик данных
+		with(mrg, points(rep(2,52), mrg[,3]))				# второй столбик данных
+		segments(rep(1,52), mrg[,2], rep(2,52), mrg[,3])	# соединительные отрезки
+		
+	Lattice (решетка): одна функция для создания (library(xplot) - хорошо когда надо добавить много графиков в один
+		xyplot
+		bwplot - box and whiskers plot
+		histogram
+		stripplot - like a boxplot but with actual points
+		dotplot - plot dots on "violin strings"
+		splom - scatterplot matrix
+		levelplot, contourplot - plot image data
+		
+		usually takes function as first argument: xyplot(y ~ x | f * g, data)
+			f * g - для группировки, по ним будут созданы несколько графиков
+		lattice функции возвращают объект trellis - его можно запихивать в девайсы
+		
+		panels: xyplot(y ~ x | f, panel = function (x, y, ...) {
+			panel.xyplot(x, y, ...)
+			panel.abline(h = median(y))
+		}) # в каждой группе по f, будет нарисован обычный график xyplot и добавлена вертикальная линия
+		panel.lmline(x, y, col="red") - линия соотв. linear regression line
+		
+	ggplot2: круто! Как и в base можно создать плот и потом добавлять, но апи продуманнее и лучше. GG - grammar of graphics
+		plots are made up of:
+			data frame,
+			aesthetics mapping: map data to color, size
+			geoms: points, lines, shapes
+			facets: for conditional plots
+			stats: binning, quantiles, smoothing
+			scales:  show what coding an aesthetic map uses (for example, male = red, female = blue)
+			coordinate system
+		plots are built up in layers: plot the data, overlay a summary, metadata and annotation
+		annotation: xlab(), ylab(), labs(), ggtitle(), классный метод expression
+		global things: theme(legend.position = "none")
+			theme_gray(), theme_bw()
+		
+		qplot(x, y, data = d, color = f, geom = c("point", "smooth"))
+			point - означает что нужно поставить точки на плот
+			smooth - добавить линию среднего и 95% confedence interval
+		qplot(x, data = d, fill = f) - гистограмма
+		qplot(x, y, data = d, facets = . ~ f) - панельки с точками
+		qplot(x, data = d, facets = f ~ ., binwidth = 2) - панельки с гистограммами
+			facets = rows_factor ~ columns_factor
+		
+		g <- ggplot(dat, aes(x=x, y=y)) - пустой график, к которому можно добавлять всякое:
+		g + geom_point() + geom_smooth(method = "lm") + facet_grid(. ~ f)
+			+ ylim(-3, 3) # точки которые выходят за эти пределы будут пропущены (просто дырка в графике)
+			+ coord_cartesian(ylim=c(-3,3)) # к outlier будут нарисованы линии (до края графика, а сам outlier - дырка)
+			
+		qplot(y=hwy, data=mpg, color=drv) # x пропущено, в x будут использованы элементы по-порядку
+		qplot(drv, hwy, data=mpg, geom="boxplot") # для каждого разного drv (ось x) будут нарисованы боксплот по hwy
+		
+Если нужно факторизовывать по протяженной переменной (с большим числом точек), то можно разрезать:
+	cutpoints <- quantile(data$ln, seq(0, 1, length = 4), na.rm = TRUE) # разрезаем на 3 части
+	data$ln2cuts <- cut(data$ln, cutpoints)
+	levels(data$ln2cuts)
+	в примере cutpoints выкинул самые первые точки (у которых ln равен минимуму) :-/
+	
+Хорошо смотреть на missing variables, чтобы узнать есть ли там что особенное
+
+Цвета:
+	В цветах графиков, если точки накладываются, хорошо выставлять альфу поменьше - будет видно плотность.
+	colorRamp() # вход два цвета, выход - функция, которая интерполирует число из отрезка [0,1] в цвет
+	colorRampPalette() # вход два цвета, выход - функция, которая возвращает массив цветов заданной длины
+	rgb()
+	Подобранные палитры: library(RColorBrewer)
+	Функция colors() чтобы посмотреть текущие цвета
+	Палитры для:
+		Sequential data - данные в последовательности например 0, 1, 2, ...
+		Diverging data - данные которые могут принимать любые значения от середины в обе стороны
+		Qualititative - данные у которых нет никакого порядка
+	
+в pdf сохранять может быть очень тормозно, т.к. pdf векторный формат и каждая точка будет отдельно описана
+копировать графики между девайсами: dev.copy, dev.copy2pdf - полезно если надо сначала посмотреть на экране а потом сохранить
+
+plot(rowMeans(data)); plot(colMeans(data))
+smoothScatter # когда нужен scatterplot но точек очень очень много
+plot(x, y, col = rgb(0,0,0,0.2)) # прозрачность позволяет увидеть больше данных
+
+pairs(airquality) # рисует плот из пар
+
+Hierarchical clustering - Agglomerative approach:
+	Find closest two things, Put them together, find next closest
+	Requires: defined distance, merging approach
+	Produces: tree, showing how close things are to each other
+	
+	Distance: euclidian distance, correlation similarity, manhattan distance - самый важный вопрос в кластеризации, так как если плохо определить расстояние, то получим мусорные результаты (Garbage in - Garbage out)
+
+	distxy <- dist(dataframe)
+	hClustering <- hclust(distxy)
+	plot(hClustering) # показывает дерево кластеризации (dendrogram)
+
+	дистанция между кластерами точек, 2 подхода:
+		- дистанция между средними координатами кластеров
+		- самая большая дистанция между точками кластеров
+		
+	heatmap - Хорошо для исследования кластеров многомерных данных. Рисует данные и пририсовывает дендрограммы кластеров
+
+	K-means: fix a number of clusters, get centroid of each cluster, assign things to closest centroid, recalculate centroids
+		Requires: distance metric, number of clusters, initial guess as to cluster centroids
+		
+		kClust <- kmeans(sub1[,-c(562,563)], centers=6, nstart=100) # убираем 2 колонки - активити и номер субьекта. Активити мы пытаемся предсказать, номер субьекта не должен влиять. 6 это количество активити
+		table(kClust$cluster, sub1$activity) # покажет как результат кластеризации предсказывает активити
+		После кластеризации можно посмотреть какие колонки доминируют в центрах кластеров
+
+	statistical approach: разбить оригинальное множество на некореллированые подмножества так, чтобы объяснить как можно больше исходных данных (PCA)
+	data compression approach: положить все переменные в одну матрицу. Найти наилучшую матрицу которая имеет меньший размер (lower rank) и объясняет оригинальные данные (SVD)
+	
+	SVD - singular value decomposition. X это матрица, каждая фича это колонка, каждое наблюдение это строка. SVD это декомпозиция:
+		X = U * D * transpose(V). 
+		U - все колонки ортогональны - left singular vectors
+		V - все колонки ортогональны - right singular vectors
+		D - диагональная матрица - singular values, она соответствует variance explained. D отсортирована в порядке уменьшения, поэтому первая колонка в U и V самые важные
+		svd(scale(mat))
+		a2 <- svd1$u[,1:2] %*% diag(svd1$d[1:2]) %*% t(svd1$v[,1:2])  # матрица a2 будет очень похожа на исходную
+		principal components - columns of V
+		При исследовании удобно взять одну из первых колонок V, найти в ней индекс максимального значения - это будет индекс той колонки в исходных данных, которая больше всего вкладывается в SVD компоненту. По некоторым наилучшим контрибуторам можно делать кластеризацию. Также, по каждой из колонок V можно строить scatter plot, раскрашивая точки в группы - будет видно как эти группы разделяются через SVD
+		
+	PCA - principal component analysis. Cначала надо вычесть среднее, разделить на стд. Потом провести SVD. И тогда right singular values это будет значением PCA
+		prcomp(scale(mat))
+		standart deviation это матрица D из svd
+		rotation это матрица V из SVD
+	
+	svd1 <- svd(datamatrix)
+	plot(svd1$d^2 / sum(svd1$d^2)) - по вертикали будет доля variance explained
+	
+	missing values - либа library(impute):
+		data[sample(1:100, size=40, replace=FALSE] <- NA
+		data <- impute.knn(data)$data # Алгоритм k nearest neighboors
+		
+		
+Переходя с R на Python, многие начинают со statsmodels, потому что в ней есть привычные R'овские формулы:
+# создаем модель на основе формулы
+smm = sm.OLS.from_formula("y ~ x1 + x2 + x3", data=df)
+# запускаем расчет модели
+res = smm.fit()
+# теперь выведем параметры рассчитанной модели
+print res.params
+
+
+<img src="https://tex.s2cms.ru/svg/%0AW_%7Bi%2C%20j%7D%20%3D%20%5Cmin%5Climits_%7Bk%20%5Cle%20j%7D(W_%7Bi-1%2C%20k%7D)%20%2B%20(Y_j%20-%20%5Cwidetilde%7BY%7D_j)%5E2%2C%0A" alt="W_{i, j} = \min\limits_{k \le j}(W_{i-1, k}) + (Y_j - \widetilde{Y}_j)^2,">
+
+Random Forest:
+	library(randomForest)
+	s <- sample(150, 100)
+	iris_train <- iris[s,]
+	iris_test <- iris[-s,]
+	rfm <- randomForest(Species ~ ., iris_train)
+	rfm
+	p <- predict(rfm, iris_test)
+	?predict
+	p
+	table(iris_test[,5],p)
+	mean(iris_test[,5] == p)
+	?importance
+	importance(rfm)
+	getTree(rfm, 500, labelVar=TRUE)
+	plot(rfm)
+	
+Разбить на train/test множества:
+	trainIndicator <- rbinom(4601, size=1, prob=0.5)
+	table(trainIndicator)
+	
+	
+	
+~~~~~~~~~~~~~~~ V. Reproducible Research
+
+Knitr markdown:
+	We see that this is an intercross with `r nind(sug)` individuals.		# inline code
+
+	```{r}   	 	# here you can press tab inside braces
+		Code chunk
+	```
+	
+	{r basicconsole} # label
+	{echo=FALSE} # не показывает R код 
+	{results="hide"}
+		
+	```{r dotpointprint, results='asis', echo=FALSE}		# output as markdown
+	cat("Here are some dot points\n\n")
+	cat(paste("* The value of y[", 1:3, "] is ", y[1:3], sep="", collapse="\n"))
+	```
+	
+	```{r createtable, results='asis', echo=FALSE}		# output markdown of table
+	cat("x | y", "--- | ---", sep="\n")
+	cat(apply(df, 1, function(X) paste(X, collapse=" | ")), sep = "\n")
+	```
+	
+	{cache=TRUE} # Кеширует результат кода - для долгих вычислений
+	
+	$y_i = \alpha + \beta x_i + e_i$	# inline equations
+	$$\frac{1}{1+\exp(-x)}$$			# display formulas
+	
+	*italic text*
+	**bold text**
+	
+	# main heading
+	## secondary heading
+	### tertiary heading
+	
+	-first list item
+	-second list item
+	for lists also: 1. 2. 3.
+	
+	[link text](link url)
+	
+	advanced linking: zzzz [link text][1]  advzxvc [link text another][2]
+	[1]: httpadsfjasdf "link text"
+	[2]:...
+	
+	newline - double space
+	
+	opts_chunk$set(echo = FALSE, results = "hide") # Global options
+	
+Always set seed (set.seed(42)) when using random number generator ---> reproducible

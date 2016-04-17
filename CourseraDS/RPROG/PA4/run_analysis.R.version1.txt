@@ -1,0 +1,119 @@
+library(dplyr)
+
+rows_limit <- 100 # Change this variable to 500 to test script
+needDownload <- FALSE # If TRUE script will assume data is downloaded and extracted
+
+downloadData = function() {
+  "Download data from url and unzip it"
+  fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+  zipFile <- "UCI HAR Dataset.zip"
+  message("Download data from web")
+  download.file(fileUrl, destfile=zipFile, mode="wb")
+  message("Extract data from zip")
+  unzip(zipFile, exdir=".", overwrite=TRUE)
+}
+
+readPart <- function(dir) {
+  "Read all data files do a list of data frames"
+  # dir variable will be either 'test' or 'train'
+  fileNames <- list(
+    bodyAccX  = paste("body_acc_x_",  dir, ".txt", sep=""),
+    bodyAccY  = paste("body_acc_y_",  dir, ".txt", sep=""),
+    bodyAccZ  = paste("body_acc_z_",  dir, ".txt", sep=""),
+    bodyGyroX = paste("body_gyro_x_", dir, ".txt", sep=""),
+    bodyGyroY = paste("body_gyro_y_", dir, ".txt", sep=""),
+    bodyGyroZ = paste("body_gyro_z_", dir, ".txt", sep=""),
+    totalAccX = paste("total_acc_x_", dir, ".txt", sep=""),
+    totalAccY = paste("total_acc_y_", dir, ".txt", sep=""),
+    totalAccZ = paste("total_acc_z_", dir, ".txt", sep=""),
+    subject   = paste("subject_", dir, ".txt", sep=""),
+    features  = paste("x_", dir, ".txt", sep=""),
+    activity  = paste("y_", dir, ".txt", sep="")
+  )
+  
+  filePaths <- list(
+    bodyAccX  = paste("UCI HAR Dataset", dir, "Inertial Signals", fileNames$bodyAccX, sep="/"), 
+    bodyAccY  = paste("UCI HAR Dataset", dir, "Inertial Signals", fileNames$bodyAccY, sep="/"), 
+    bodyAccZ  = paste("UCI HAR Dataset", dir, "Inertial Signals", fileNames$bodyAccZ, sep="/"), 
+    bodyGyroX = paste("UCI HAR Dataset", dir, "Inertial Signals", fileNames$bodyGyroX, sep="/"),
+    bodyGyroY = paste("UCI HAR Dataset", dir, "Inertial Signals", fileNames$bodyGyroY, sep="/"),
+    bodyGyroZ = paste("UCI HAR Dataset", dir, "Inertial Signals", fileNames$bodyGyroZ, sep="/"),
+    totalAccX = paste("UCI HAR Dataset", dir, "Inertial Signals", fileNames$totalAccX, sep="/"),
+    totalAccY = paste("UCI HAR Dataset", dir, "Inertial Signals", fileNames$totalAccY, sep="/"),
+    totalAccZ = paste("UCI HAR Dataset", dir, "Inertial Signals", fileNames$totalAccZ, sep="/"),
+    subject   = paste("UCI HAR Dataset", dir, fileNames$subject, sep="/"),
+    features  = paste("UCI HAR Dataset", dir, fileNames$features, sep="/"),
+    activity  = paste("UCI HAR Dataset", dir, fileNames$activity, sep="/")
+  )
+  
+  list(
+    bodyAccX  = read.table(filePaths$bodyAccX,  strip.white=TRUE, header=FALSE, nrows=rows_limit),
+    bodyAccY  = read.table(filePaths$bodyAccY,  strip.white=TRUE, header=FALSE, nrows=rows_limit),
+    bodyAccZ  = read.table(filePaths$bodyAccZ,  strip.white=TRUE, header=FALSE, nrows=rows_limit),
+    bodyGyroX = read.table(filePaths$bodyGyroX, strip.white=TRUE, header=FALSE, nrows=rows_limit),
+    bodyGyroY = read.table(filePaths$bodyGyroY, strip.white=TRUE, header=FALSE, nrows=rows_limit),
+    bodyGyroZ = read.table(filePaths$bodyGyroZ, strip.white=TRUE, header=FALSE, nrows=rows_limit),
+    totalAccX = read.table(filePaths$totalAccX, strip.white=TRUE, header=FALSE, nrows=rows_limit),
+    totalAccY = read.table(filePaths$totalAccY, strip.white=TRUE, header=FALSE, nrows=rows_limit),
+    totalAccZ = read.table(filePaths$totalAccZ, strip.white=TRUE, header=FALSE, nrows=rows_limit),
+    subject   = read.table(filePaths$subject,   strip.white=TRUE, header=FALSE, nrows=rows_limit),
+    features  = read.table(filePaths$features,  strip.white=TRUE, header=FALSE, nrows=rows_limit),
+    activity  = read.table(filePaths$activity,  strip.white=TRUE, header=FALSE, nrows=rows_limit)   
+  )
+}
+
+mergeParts <- function(partLeft, partRight) {
+  "Merge test and train data sets to a one data set with same structure"
+  result <- lapply(seq_along(partLeft), function(i) rbind(partLeft[[i]], partRight[[i]]))
+  names(result) <- names(partLeft)
+  result
+}
+
+if (needDownload) downloadData()
+
+# 1. Merge the training and the test sets to create one data set.
+dataSet <- mergeParts(readPart("test"), readPart("train"))
+
+# Make good labels
+names(dataSet$bodyAccX) <- paste("bodyAccX", seq_along(names(dataSet$bodyAccX)), sep="")
+names(dataSet$bodyAccY) <- paste("bodyAccY", seq_along(names(dataSet$bodyAccY)), sep="")
+names(dataSet$bodyAccZ) <- paste("bodyAccZ", seq_along(names(dataSet$bodyAccZ)), sep="")
+
+names(dataSet$bodyGyroX) <- paste("bodyGyroX", seq_along(names(dataSet$bodyGyroX)), sep="")
+names(dataSet$bodyGyroY) <- paste("bodyGyroY", seq_along(names(dataSet$bodyGyroY)), sep="")
+names(dataSet$bodyGyroZ) <- paste("bodyGyroZ", seq_along(names(dataSet$bodyGyroZ)), sep="")
+
+names(dataSet$totalAccX) <- paste("totalAccX", seq_along(names(dataSet$totalAccX)), sep="")
+names(dataSet$totalAccY) <- paste("totalAccY", seq_along(names(dataSet$totalAccY)), sep="")
+names(dataSet$totalAccZ) <- paste("totalAccZ", seq_along(names(dataSet$totalAccZ)), sep="")
+
+names(dataSet$subject) <- "subject"
+names(dataSet$activity) <- "activity"
+
+# Make syntactically valid names from loaded feature names and apply them
+featuresData <- read.table("UCI HAR Dataset/features.txt", header=FALSE, stringsAsFactors=FALSE)
+names(featuresData) <- c("rowindex", "feature")
+names(dataSet$features)[featuresData$rowindex] <- make.names(featuresData$feature, unique=TRUE)
+
+# 2. Extract only the measurements on the mean and standard deviation for each measurement.
+# feature name like 'mean()' was converted to 'mean..' on previous step
+dataSet$features <- select(dataSet$features, matches("mean\\.|std\\."))
+
+# 3. Use descriptive activity names to name the activities in the data set
+activityNames <- read.table("UCI HAR Dataset/activity_labels.txt", header=FALSE)
+names(activityNames) <- c("code", "name")
+dataSet$activity <- activityNames[match(dataSet$activity$activity, activityNames$code), 2]
+
+# 4. Appropriately labels the data set with descriptive variable names.
+# Already done, so we just merge all data set list values to a one big table
+dataSet<- do.call(cbind, dataSet)
+
+# 5. From the data set in step 4, creates a second, independent tidy data set with the average
+#    of each variable for each activity and each subject.
+summaryData <- dataSet %>% group_by(activity, subject) %>% summarize_each(funs(mean))
+
+
+
+
+
+

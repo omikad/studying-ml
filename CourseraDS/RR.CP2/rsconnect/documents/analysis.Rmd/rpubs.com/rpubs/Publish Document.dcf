@@ -1,0 +1,7 @@
+name: Publish Document
+account: rpubs
+server: rpubs.com
+bundleId:
+        https://api.rpubs.com/api/v1/document/171687/cdc2a48dd4164a5fbfcfccb505b3f64e
+url: http://rpubs.com/omikad/171687
+when: 1460867826.02989

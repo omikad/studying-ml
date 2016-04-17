@@ -1,0 +1,31 @@
+setwd("~/CourseraDS/DC.Q2")
+
+
+1)
+rreq <- content(req)
+list(rreq[[8]]$name, rreq[[8]]$created_at)
+
+
+2)
+download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06pid.csv", mode="wb", destfile = "q2.csv")
+
+acs <- read.csv("q2.csv", stringAsFactors=FALSE)
+
+4)
+con <- url("http://biostat.jhsph.edu/~jleek/contact.html")
+lines <- readLines(con)
+close(con)
+c(nchar(lines[10]), nchar(lines[20]), nchar(lines[30]), nchar(lines[100]))
+require(httr)
+require(XML)
+lines <- GET("http://biostat.jhsph.edu/~jleek/contact.html")
+content <- content(lines, as="text")
+htmlParsed <- htmlParse(content, asText=TRUE)
+xpathSApply(htmlParsed, "//title", xmlValue)
+
+
+5)
+download.file("https://d396qusza40orc.cloudfront.net/getdata%2Fwksst8110.for", mode="wb", destfile = "q5.for")
+q5lines <- readLines("q5.for")
+q5list <- lapply(q5lines[-(1:4)], substr, 29, 32)
+sum(as.double(unlist(q5list)))
