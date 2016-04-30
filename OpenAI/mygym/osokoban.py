@@ -24,11 +24,11 @@ class OsokobanEnv(gym.Env):
 
     # Game items
     Empty, Player, Wall, Diamond, Chest, FullChest = range(6)
-    _out_chars = [' ', '&', '#', 'O', '.', '+']
+    MapChars = [' ', '&', '#', 'O', '.', '+']
 
     # Game actions
     Left, Up, Right, Down, Restart = range(5)
-    _out_actions = ["Left", "Up", "Right", "Down", "Restart"]
+    Actions = ["Left", "Up", "Right", "Down", "Restart"]
     _deltas = [(0, -1), (-1, 0), (0, 1), (1, 0)]
 
     def __init__(self):
@@ -59,7 +59,7 @@ class OsokobanEnv(gym.Env):
 
     def _move_player(self, delta):
         dest = self._sum_points(self.player_point, delta)
-        if not self._point_allowed(dest):
+        if not self.point_allowed(dest):
             return
 
         destitem = self.map[dest]
@@ -73,7 +73,7 @@ class OsokobanEnv(gym.Env):
 
         if destitem == self.Diamond or destitem == self.FullChest:
             nextdest = self._sum_points(dest, delta)
-            if not self._point_allowed(nextdest):
+            if not self.point_allowed(nextdest):
                 return
 
             nextdestitem = self.map[nextdest]
@@ -101,21 +101,24 @@ class OsokobanEnv(gym.Env):
 
         outfile = StringIO() if mode == 'ansi' else sys.stdout
 
-        out = self.map.copy().tolist()
-        out = [[self._out_chars[i] for i in line] for line in out]
-
         if self.lastaction is not None:
-            outfile.write("  ({})\n".format(self._out_actions[self.lastaction]))
+            outfile.write("  ({})\n".format(self.Actions[self.lastaction]))
 
-        b = utils.colorize(' ', 'gray', highlight=True)
-        bline = "{}{}{}\n".format(b, b * self.shape[1], b)
-        outfile.write(bline)
-        outfile.write("\n".join([(b + "".join(row) + b) for row in out]) + "\n")
-        outfile.write(bline)
+        self.render_observation(self.map, outfile)
         outfile.write("\n")
 
         if mode != 'human':
             return outfile
+
+    def render_observation(self, observation, outfile=sys.stdout):
+        out = observation.copy().tolist()
+        out = [[self.MapChars[i] for i in line] for line in out]
+
+        b = utils.colorize(' ', 'gray', highlight=True)
+        bline = "{}{}{}\n".format(b, b * observation.shape[1], b)
+        outfile.write(bline)
+        outfile.write("\n".join([(b + "".join(row) + b) for row in out]) + "\n")
+        outfile.write(bline)
 
     def _new_level(self):
         walls = np.random.randint(5, 15)
@@ -140,6 +143,6 @@ class OsokobanEnv(gym.Env):
     def _sum_points(x, y):
         return x[0] + y[0], x[1] + y[1]
 
-    def _point_allowed(self, point):
+    def point_allowed(self, point):
         return 0 <= point[0] < self.shape[0] and 0 <= point[1] < self.shape[1]
 

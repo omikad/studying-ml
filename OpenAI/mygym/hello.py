@@ -1,13 +1,10 @@
 import sys
 import gym
+import pandas as pd
 from gym.envs.registration import register
 from mygym.osokoban import OsokobanEnv
 
-register(
-    id='Osokoban-v0',
-    entry_point='mygym.osokoban:OsokobanEnv',
-    timestep_limit=1000,
-)
+Vectors = ["Left", "Up", "Right", "Down", "KeyLeft", "KeyUp", "KeyRight", "KeyDown", "KeyRestart"]
 
 
 def get_action_from_user():
@@ -24,22 +21,117 @@ def get_action_from_user():
         if key == ' ':
             return OsokobanEnv.Restart
 
-env = gym.make('Osokoban-v0')
-env.reset()
 
-print type(OsokobanEnv)
-
-for _ in xrange(100):
-    env.render()
-
-    action = get_action_from_user()
-
-    observation, reward, done, info = env.step(action)
-
-    if done:
-        break
-
-    print reward
+def get_history(env, count):
+    history = []
+    for _ in xrange(count):
+        cause = env.map.copy()
+        vector = env.action_space.sample()
+        effect, reward, done, info = env.step(vector)
+        history.append((cause, vector, effect))
+    return history
 
 
+def show_history_item(env, history_item):
+    env.render_observation(history_item[0])
+    print OsokobanEnv.Actions[history_item[1]]
+    env.render_observation(history_item[2])
 
+
+def show_cve_item(cve):
+    print "'{}' ({}) -> {} -> '{}' ({})".format(OsokobanEnv.MapChars[cve[0]],
+                                                cve[1],
+                                                Vectors[cve[2]],
+                                                OsokobanEnv.MapChars[cve[3]],
+                                                cve[4])
+
+
+def show_abstract_cve_item(acve):
+    print "'{}' -> {} -> '{}'".format(OsokobanEnv.MapChars[acve[0]],
+                                      Vectors[acve[1]],
+                                      OsokobanEnv.MapChars[acve[2]])
+
+
+def show_idea(idea):
+    print "'{}'".format(OsokobanEnv.MapChars[idea])
+
+
+def history_to_cves(env, history):
+    cves = []
+    deltas = [(0, -1), (-1, 0), (0, 1), (1, 0)]
+    for t in xrange(len(history)):
+        cause, vector, effect = history[t]
+        for i in xrange(cause.shape[0]):
+            for j in xrange(cause.shape[1]):
+                c = cause[i, j]
+                for k in xrange(4):
+                    delta = deltas[k]
+                    dest = (i + delta[0], j + delta[1])
+                    if env.point_allowed(dest):
+                        cves.append((c, (t, i, j), k, cause[dest], (t, dest[0], dest[1])))
+                cves.append((c, (t, i, j), 4 + vector, effect[i, j], (t + 1, i, j)))
+    return cves
+
+
+def get_abstract_cves(cves):
+    abstract_cves = set()
+    for cause, cause_point, vector, effect, effect_point in cves:
+        abstract_cves.add((cause, vector, effect))
+    return list(abstract_cves)
+
+
+def get_ideas(abstract_cves):
+    ideas = set()
+    for cause, vector, effect in abstract_cves:
+        ideas.add(cause)
+        ideas.add(effect)
+    return list(ideas)
+
+
+# def get_oracles(cves, vectors_dummy, ideas_dummy):
+#     index = dict()
+#     for cve in cves:
+#         cause_point = cve[1]
+#         if cause_point not in index:
+#             index[cause_point] = []
+#         index[cause_point].append(cve)
+#
+#     for _, context_cves in index.items():
+#
+
+
+def play():
+    register(
+        id='Osokoban-v0',
+        entry_point='mygym.osokoban:OsokobanEnv',
+        timestep_limit=1000)
+
+    env = gym.make('Osokoban-v0')
+    env.reset()
+
+    history = get_history(env, 50)
+    show_history_item(env, history[0])
+
+    cves = history_to_cves(env, history)
+    print ''
+    print 'cves:', len(cves)
+    for cve in cves[0:10]:
+        show_cve_item(cve)
+
+    abstract_cves = get_abstract_cves(cves)
+    print ''
+    print 'abstract cves:', len(abstract_cves)
+    for acve in abstract_cves[0:10]:
+        show_abstract_cve_item(acve)
+
+    ideas = get_ideas(abstract_cves)
+    print ''
+    print 'ideas:', len(ideas)
+    for idea in ideas:
+        show_idea(idea)
+
+    vectors_dummy = pd.get_dummies(Vectors)
+    ideas_dummy = pd.get_dummies(ideas)
+
+
+play()
