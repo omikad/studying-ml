@@ -1,7 +1,7 @@
 import sys
 import gym
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+import xgboost as xgb
 from gym.envs.registration import register
 from mygym.osokoban import OsokobanEnv
 
@@ -119,43 +119,47 @@ def get_oracle_input_row(point, cves_index, nideas):
     return row
 
 
-def get_oracle_output_row(effect, nideas):
-    row = np.zeros(nideas, dtype=np.float32)
-    row[effect] = 1
-    return row
-
-
 def get_oracles(cves, cves_index, nideas):
-    dataset = [{'x': [], 'y': []} for _ in Vectors]
+    dataset = [[{'x': [], 'y': []} for _ in Vectors] for __ in xrange(nideas)]
 
-    for _, cause_point, vector, effect, __ in cves:
+    for cause, cause_point, vector, effect, __ in cves:
         if IsGameVector[vector]:
-            pair = dataset[vector]
+            pair = dataset[cause][vector]
             pair['x'].append(get_oracle_input_row(cause_point, cves_index, nideas))
-            pair['y'].append(get_oracle_output_row(effect, nideas))
+            pair['y'].append(effect)
 
     oracles = dict()
-    for vector in xrange(len(Vectors)):
-        if IsGameVector[vector]:
-            pair = dataset[vector]
-            x = np.array(pair['x'])
-            y = np.array(pair['y'])
-            indices = np.random.permutation(len(x))
-            train_size = int(len(x) * 0.8)
-            train_idx, test_idx = indices[:train_size], indices[train_size:]
-            train_x, test_x = x[train_idx], x[test_idx]
-            train_y, test_y = y[train_idx], y[test_idx]
+    for cause in xrange(nideas):
+        oracles[cause] = dict()
 
-            print 'Fit game vector', Vectors[vector], 'train', len(train_x), 'test', len(test_x)
-            model = RandomForestClassifier(n_estimators=50)
-            model.fit(train_x, train_y)
+        for vector in xrange(len(Vectors)):
+            if IsGameVector[vector]:
+                pair = dataset[cause][vector]
+                x = np.array(pair['x'])
+                y = np.array(pair['y'])
 
-            pred = model.predict(test_x)
-            print 'error mean', np.mean(np.abs(pred - test_y))
+                if len(x) <= 4:
+                    oracles[cause][vector] = None
+                    continue
 
-            oracles[vector] = model
+                indices = np.random.permutation(len(x))
+                train_size = int(len(x) * 0.8)
+                train_idx, test_idx = indices[:train_size], indices[train_size:]
+                train_x, test_x = x[train_idx], x[test_idx]
+                train_y, test_y = y[train_idx], y[test_idx]
 
-    print 'Oracles learned'
+                model = xgb.XGBClassifier(max_depth=3, n_estimators=10, learning_rate=0.05)
+                model.fit(train_x, train_y)
+
+                pred = model.predict(test_x)
+                print "Fit '{}' -> {}: train/test {}/{}, err {}".format(
+                    OsokobanEnv.MapChars[cause],
+                    Vectors[vector],
+                    len(train_x),
+                    len(test_x),
+                    (sum(int(pred[i]) != test_y[i] for i in range(len(test_y))) / float(len(test_y))))
+
+                oracles[cause][vector] = model
     return oracles
 
 
@@ -168,7 +172,7 @@ def play():
     env = gym.make('Osokoban-v0')
     env.reset()
 
-    history = get_history(env, 50)
+    history = get_history(env, 1000)
     show_history_item(env, history[0])
 
     cves = history_to_cves(env, history)
@@ -200,7 +204,10 @@ def play():
     x = get_oracle_input_row((len(history) - 1, env.player_point[0], env.player_point[1]), cves_index, nideas)
     for vector in xrange(len(Vectors)):
         if IsGameVector[vector]:
-            pred = oracles[vector].predict([x])
-            print Vectors[vector], '->', OsokobanEnv.MapChars[np.argmax(pred[0])]
+            # idea 1 is the player
+            oracle = oracles[1][vector]
+            if oracle is not None:
+                pred = oracle.predict([x])
+                print Vectors[vector], '->', OsokobanEnv.MapChars[pred[0]]
 
 play()
