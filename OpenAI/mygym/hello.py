@@ -1,10 +1,14 @@
 import sys
 import gym
-import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
 from gym.envs.registration import register
 from mygym.osokoban import OsokobanEnv
 
 Vectors = ["Left", "Up", "Right", "Down", "KeyLeft", "KeyUp", "KeyRight", "KeyDown", "KeyRestart"]
+IsGameVector = [False, False, False, False, True, True, True, True, True]
+SpatialVectorsCount = 4
+GameVectorsCount = 5
 
 
 def get_action_from_user():
@@ -53,7 +57,7 @@ def show_abstract_cve_item(acve):
 
 
 def show_idea(idea):
-    print "'{}'".format(OsokobanEnv.MapChars[idea])
+    print "{}: '{}'".format(idea, OsokobanEnv.MapChars[idea])
 
 
 def history_to_cves(env, history):
@@ -69,7 +73,7 @@ def history_to_cves(env, history):
                     dest = (i + delta[0], j + delta[1])
                     if env.point_allowed(dest):
                         cves.append((c, (t, i, j), k, cause[dest], (t, dest[0], dest[1])))
-                cves.append((c, (t, i, j), 4 + vector, effect[i, j], (t + 1, i, j)))
+                cves.append((c, (t, i, j), SpatialVectorsCount + vector, effect[i, j], (t + 1, i, j)))
     return cves
 
 
@@ -88,16 +92,71 @@ def get_ideas(abstract_cves):
     return list(ideas)
 
 
-# def get_oracles(cves, vectors_dummy, ideas_dummy):
-#     index = dict()
-#     for cve in cves:
-#         cause_point = cve[1]
-#         if cause_point not in index:
-#             index[cause_point] = []
-#         index[cause_point].append(cve)
-#
-#     for _, context_cves in index.items():
-#
+def get_cves_index(cves):
+    index = dict()
+    for cve in cves:
+        cause_point = cve[1]
+        if cause_point not in index:
+            index[cause_point] = []
+        index[cause_point].append(cve)
+    return index
+
+
+def get_oracle_input_row(point, cves_index, nideas):
+    nvec = SpatialVectorsCount
+    row = np.zeros(nideas + nvec * nideas * (1 + nvec), dtype=np.float32)
+
+    for cause, __, vector, effect, effect_point in cves_index[point]:
+        row[cause] = 1
+
+        if not IsGameVector[vector]:
+            row[nideas + vector * nideas + effect] = 1
+
+            if effect_point in cves_index:
+                for ___, ____, vector2, effect2, effect_point2 in cves_index[effect_point]:
+                    if not IsGameVector[vector2]:
+                        row[nideas + nvec * nideas * (1 + vector) + vector2 * nideas + effect2] = 1
+    return row
+
+
+def get_oracle_output_row(effect, nideas):
+    row = np.zeros(nideas, dtype=np.float32)
+    row[effect] = 1
+    return row
+
+
+def get_oracles(cves, cves_index, nideas):
+    dataset = [{'x': [], 'y': []} for _ in Vectors]
+
+    for _, cause_point, vector, effect, __ in cves:
+        if IsGameVector[vector]:
+            pair = dataset[vector]
+            pair['x'].append(get_oracle_input_row(cause_point, cves_index, nideas))
+            pair['y'].append(get_oracle_output_row(effect, nideas))
+
+    oracles = dict()
+    for vector in xrange(len(Vectors)):
+        if IsGameVector[vector]:
+            pair = dataset[vector]
+            x = np.array(pair['x'])
+            y = np.array(pair['y'])
+            indices = np.random.permutation(len(x))
+            train_size = int(len(x) * 0.8)
+            train_idx, test_idx = indices[:train_size], indices[train_size:]
+            train_x, test_x = x[train_idx], x[test_idx]
+            train_y, test_y = y[train_idx], y[test_idx]
+
+            print 'Fit game vector', Vectors[vector], 'train', len(train_x), 'test', len(test_x)
+            model = RandomForestClassifier(n_estimators=50)
+            model.fit(train_x, train_y)
+
+            pred = model.predict(test_x)
+            print 'error mean', np.mean(np.abs(pred - test_y))
+
+            oracles[vector] = model
+
+    print 'Oracles learned'
+    return oracles
 
 
 def play():
@@ -113,25 +172,35 @@ def play():
     show_history_item(env, history[0])
 
     cves = history_to_cves(env, history)
-    print ''
+    print
     print 'cves:', len(cves)
     for cve in cves[0:10]:
         show_cve_item(cve)
 
     abstract_cves = get_abstract_cves(cves)
-    print ''
+    print
     print 'abstract cves:', len(abstract_cves)
     for acve in abstract_cves[0:10]:
         show_abstract_cve_item(acve)
 
     ideas = get_ideas(abstract_cves)
-    print ''
+    print
     print 'ideas:', len(ideas)
     for idea in ideas:
         show_idea(idea)
 
-    vectors_dummy = pd.get_dummies(Vectors)
-    ideas_dummy = pd.get_dummies(ideas)
+    cves_index = get_cves_index(cves)
+    print 'cves index:', len(cves_index)
 
+    nideas = len(ideas)
+
+    oracles = get_oracles(cves, cves_index, nideas)
+
+    env.render_observation(env.map)
+    x = get_oracle_input_row((len(history) - 1, env.player_point[0], env.player_point[1]), cves_index, nideas)
+    for vector in xrange(len(Vectors)):
+        if IsGameVector[vector]:
+            pred = oracles[vector].predict([x])
+            print Vectors[vector], '->', OsokobanEnv.MapChars[np.argmax(pred[0])]
 
 play()
