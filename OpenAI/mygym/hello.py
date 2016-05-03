@@ -9,6 +9,7 @@ Vectors = ["Left", "Up", "Right", "Down", "KeyLeft", "KeyUp", "KeyRight", "KeyDo
 IsGameVector = [False, False, False, False, True, True, True, True, True]
 SpatialVectorsCount = 4
 GameVectorsCount = 5
+Deltas = [(0, -1), (-1, 0), (0, 1), (1, 0)]
 
 
 def get_action_from_user():
@@ -33,8 +34,24 @@ def get_history(env, count):
         vector = env.action_space.sample()
         effect, reward, done, info = env.step(vector)
         history.append((cause, vector + SpatialVectorsCount, effect.copy()))
-
     return history
+
+
+def play_with_user_oracle(env, history, oracle):
+    t = len(history) + 1
+    while True:
+        env.render_observation(env.map)
+
+        cves = []
+        add_spatial_cves(env, cves, env.map, t)
+        oracle.add_cves_to_index(cves)
+
+        last_player_point = (t, env.player_point[0], env.player_point[1])
+        oracle.predict(last_player_point)
+
+        vector = get_action_from_user()
+        env.step(vector)
+        t += 1
 
 
 def show_history_item(env, history_item):
@@ -53,12 +70,12 @@ def show_idea(idea):
     print "{}: '{}'".format(idea, OsokobanEnv.MapChars[idea])
 
 
-def add_spatial_cves(env, deltas, cves, level, t):
+def add_spatial_cves(env, cves, level, t):
     for i in xrange(level.shape[0]):
         for j in xrange(level.shape[1]):
             c = level[i, j]
             for k in xrange(4):
-                delta = deltas[k]
+                delta = Deltas[k]
                 dest = (i + delta[0], j + delta[1])
                 if env.point_allowed(dest):
                     cves.append((c, (t, i, j), k, level[dest], (t, dest[0], dest[1])))
@@ -66,15 +83,14 @@ def add_spatial_cves(env, deltas, cves, level, t):
 
 def history_to_cves(env, history):
     cves = []
-    deltas = [(0, -1), (-1, 0), (0, 1), (1, 0)]
     for t in xrange(len(history)):
         cause, vector, effect = history[t]
-        add_spatial_cves(env, deltas, cves, cause, t)
+        add_spatial_cves(env, cves, cause, t)
         for i in xrange(cause.shape[0]):
             for j in xrange(cause.shape[1]):
                 c = cause[i, j]
                 cves.append((c, (t, i, j), vector, effect[i, j], (t + 1, i, j)))
-    add_spatial_cves(env, deltas, cves, history[-1][2], len(history))
+    add_spatial_cves(env, cves, history[-1][2], len(history))
     return cves
 
 
@@ -94,10 +110,10 @@ def play():
     env = gym.make('Osokoban-v0')
     # env.shape = (4, 4)
     # env.walls_lim = (0, 1)
-    env.diamonds_lim = (0, 1)
+    # env.diamonds_lim = (0, 1)
     env.reset()
 
-    history = get_history(env, 1000)
+    history = get_history(env, 500)
     cves = history_to_cves(env, history)
     abstract_cves = get_abstract_cves(cves)
 
@@ -107,9 +123,6 @@ def play():
 
     oracle = Oracle(cves, SpatialVectorsCount, IsGameVector, Vectors, OsokobanEnv.MapChars)
 
-    env.render_observation(env.map)
-    last_player_point = (len(history), env.player_point[0], env.player_point[1])
-
-    oracle.predict(last_player_point)
+    play_with_user_oracle(env, history, oracle)
 
 play()

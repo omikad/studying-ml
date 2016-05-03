@@ -10,7 +10,8 @@ class Oracle:
         self.vector_names = vector_names
         self.idea_names = idea_names
 
-        self.cves_index = self._get_cves_index(cves)
+        self.cves_index = dict()
+        self.add_cves_to_index(cves)
         print 'cves index:', len(self.cves_index)
 
         dataset = [[{'x': [], 'y': []} for _ in is_game_vector] for __ in xrange(self.nideas)]
@@ -85,6 +86,14 @@ class Oracle:
             print ohe, ':', self.vector_names[vec], self.idea_names[np.argmax(ohe)]
             vec = (vec + 1) % nvec
 
+    def add_cves_to_index(self, cves):
+        index = self.cves_index
+        for cve in cves:
+            cause_point = cve[1]
+            if cause_point not in index:
+                index[cause_point] = []
+            index[cause_point].append(cve)
+
     def print_context_cves(self, point):
         for cve in self.cves_index[point]:
             print "'{}' {} -> {} -> '{}' {}".format(self.idea_names[cve[0]],
@@ -110,12 +119,3 @@ class Oracle:
                             row[nvec * nideas * (1 + vector) + vector2 * nideas + effect2] = 1
         return row
 
-    @staticmethod
-    def _get_cves_index(cves):
-        index = dict()
-        for cve in cves:
-            cause_point = cve[1]
-            if cause_point not in index:
-                index[cause_point] = []
-            index[cause_point].append(cve)
-        return index
