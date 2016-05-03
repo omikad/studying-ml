@@ -138,7 +138,7 @@ def get_oracles(cves, cves_index, nideas):
                 x = np.array(pair['x'])
                 y = np.array(pair['y'])
 
-                if len(x) <= 4:
+                if len(x) <= 4 or cause != 1:
                     oracles[cause][vector] = None
                     continue
 
@@ -148,7 +148,7 @@ def get_oracles(cves, cves_index, nideas):
                 train_x, test_x = x[train_idx], x[test_idx]
                 train_y, test_y = y[train_idx], y[test_idx]
 
-                model = xgb.XGBClassifier(max_depth=3, n_estimators=10, learning_rate=0.05)
+                model = xgb.XGBClassifier(max_depth=3, min_child_weight=2, n_estimators=100)
                 model.fit(train_x, train_y)
 
                 pred = model.predict(test_x)

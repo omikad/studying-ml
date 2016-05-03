@@ -31,8 +31,10 @@ class OsokobanEnv(gym.Env):
     Actions = ["Left", "Up", "Right", "Down", "Restart"]
     _deltas = [(0, -1), (-1, 0), (0, 1), (1, 0)]
 
-    def __init__(self):
-        self.shape = (10, 8)
+    def __init__(self, shape=(6, 4), walls_lim=(2, 10), diamonds_lim=(1, 5)):
+        self.shape = shape
+        self.walls_lim = walls_lim
+        self.diamonds_lim = diamonds_lim
         n_actions = 5
         n_cell_types = 5
         self.lastaction = None
@@ -55,7 +57,7 @@ class OsokobanEnv(gym.Env):
 
         reward = np.sum(self.map == self.FullChest)
 
-        return self.map, reward, reward >= self.diamonds, None
+        return self.map, reward, reward >= self.diamonds and reward > 0, None
 
     def _move_player(self, delta):
         dest = self._sum_points(self.player_point, delta)
@@ -121,9 +123,8 @@ class OsokobanEnv(gym.Env):
         outfile.write(bline)
 
     def _new_level(self):
-        walls = np.random.randint(5, 15)
-        self.diamonds = np.random.randint(2, 8)
-
+        walls = np.random.randint(self.walls_lim[0], self.walls_lim[1])
+        self.diamonds = np.random.randint(self.diamonds_lim[0], self.diamonds_lim[1])
         self.map = np.zeros(self.shape, dtype=int)
         self._fill_map_item(walls, self.Wall)
         self._fill_map_item(self.diamonds, self.Diamond)
@@ -132,6 +133,7 @@ class OsokobanEnv(gym.Env):
         self.behind_player = self.Empty
 
     def _fill_map_item(self, count, item):
+        point = (0, 0)
         while count > 0:
             point = (np.random.randint(self.shape[0]), np.random.randint(self.shape[1]))
             if self.map[point] == 0:
