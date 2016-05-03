@@ -31,7 +31,7 @@ class Oracle:
                     x = np.array(pair['x'])
                     y = np.array(pair['y'])
 
-                    if len(x) <= 4 or cause != 1:
+                    if len(x) <= 4:
                         oracles[cause][vector] = None
                         continue
 
@@ -41,10 +41,8 @@ class Oracle:
                     train_x, test_x = x[train_idx], x[test_idx]
                     train_y, test_y = y[train_idx], y[test_idx]
 
-                    model = xgb.XGBClassifier(max_depth=3, min_child_weight=2, n_estimators=100)
+                    model = xgb.XGBClassifier(max_depth=3, min_child_weight=2, n_estimators=10)
                     model.fit(train_x, train_y)
-
-                    print 'train', train_x.shape, 'test', test_x.shape
 
                     pred = model.predict(test_x)
                     print "Fit '{}' -> {}: train/test {}/{}, err {}".format(
@@ -56,6 +54,15 @@ class Oracle:
 
                     oracles[cause][vector] = model
         self.oracles = oracles
+
+    def _print_input_data(self, cause, vector, x, y):
+        for i in xrange(len(x)):
+            xrow = x[i].reshape((len(x[i]) / self.nideas, self.nideas))
+            s = []
+            for j in xrange(len(xrow)):
+                idea = '-' if sum(xrow[j]) < 0.01 else self.idea_names[np.argmax(xrow[j])]
+                s.append(idea)
+            print s, self.idea_names[y[i]], 'cause:vector', self.idea_names[cause], self.vector_names[vector]
 
     def predict(self, point):
         x = self._get_oracle_input_row(point)
@@ -77,6 +84,14 @@ class Oracle:
         for ohe in x:
             print ohe, ':', self.vector_names[vec], self.idea_names[np.argmax(ohe)]
             vec = (vec + 1) % nvec
+
+    def print_context_cves(self, point):
+        for cve in self.cves_index[point]:
+            print "'{}' {} -> {} -> '{}' {}".format(self.idea_names[cve[0]],
+                                                    cve[1],
+                                                    self.vector_names[cve[2]],
+                                                    self.idea_names[cve[3]],
+                                                    cve[4])
 
     def _get_oracle_input_row(self, point):
         nvec = self.spatial_vectors_count

@@ -61,6 +61,7 @@ class OsokobanEnv(gym.Env):
 
     def _move_player(self, delta):
         dest = self._sum_points(self.player_point, delta)
+
         if not self.point_allowed(dest):
             return
 
