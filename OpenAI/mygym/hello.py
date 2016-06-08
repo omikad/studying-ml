@@ -1,8 +1,10 @@
 import sys
+import numpy as np
 import gym
 from gym.envs.registration import register
 
 from mygym.oracle import Oracle
+from mygym.metaoracle import MetaOracle
 from mygym.osokoban import OsokobanEnv
 
 Vectors = ["Left", "Up", "Right", "Down", "KeyLeft", "KeyUp", "KeyRight", "KeyDown", "KeyRestart"]
@@ -102,6 +104,8 @@ def get_abstract_cves(cves):
 
 
 def play():
+    np.random.seed(1337)
+
     register(
         id='Osokoban-v0',
         entry_point='mygym.osokoban:OsokobanEnv',
@@ -113,7 +117,7 @@ def play():
     # env.diamonds_lim = (0, 1)
     env.reset()
 
-    history = get_history(env, 500)
+    history = get_history(env, 100)
     cves = history_to_cves(env, history)
     abstract_cves = get_abstract_cves(cves)
 
@@ -123,6 +127,8 @@ def play():
 
     oracle = Oracle(cves, SpatialVectorsCount, IsGameVector, Vectors, OsokobanEnv.MapChars)
 
-    play_with_user_oracle(env, history, oracle)
+    # play_with_user_oracle(env, history, oracle)
+
+    metaoracle = MetaOracle(env.MapChars, oracle, IsGameVector)
 
 play()
