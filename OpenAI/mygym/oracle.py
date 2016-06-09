@@ -1,33 +1,32 @@
 import numpy as np
 import xgboost as xgb
 
+from mygym.cve import Cve
+
 
 class Oracle:
-    def __init__(self, cves, spatial_vectors_count, is_game_vector, vector_names, idea_names):
+    def __init__(self, cves, spatial_vectors_count):
         self.spatial_vectors_count = spatial_vectors_count
-        self.nideas = len(idea_names)
-        self.is_game_vector = is_game_vector
-        self.vector_names = vector_names
-        self.idea_names = idea_names
+        self.nideas = len(Cve.Idea_Names)
 
         self.cves_index = dict()
         self.add_cves_to_index(cves)
         print 'cves index:', len(self.cves_index)
 
-        dataset = [[{'x': [], 'y': []} for _ in is_game_vector] for __ in xrange(self.nideas)]
+        dataset = [[{'x': [], 'y': []} for _ in Cve.Vector_Names] for __ in xrange(self.nideas)]
 
-        for cause, cause_point, vector, effect, ___ in cves:
-            if is_game_vector[vector]:
-                pair = dataset[cause][vector]
-                pair['x'].append(self._get_oracle_input_row(cause_point))
-                pair['y'].append(effect)
+        for cve in cves:
+            if Cve.IsGameVector[cve.vector]:
+                pair = dataset[cve.cause_idea][cve.vector]
+                pair['x'].append(self._get_oracle_input_row(cve.cause_point))
+                pair['y'].append(cve.effect_idea)
 
         oracles = dict()
         for cause in xrange(self.nideas):
             oracles[cause] = dict()
 
-            for vector in xrange(len(is_game_vector)):
-                if is_game_vector[vector]:
+            for vector in xrange(len(Cve.IsGameVector)):
+                if Cve.IsGameVector[vector]:
                     pair = dataset[cause][vector]
                     x = np.array(pair['x'])
                     y = np.array(pair['y'])
@@ -47,8 +46,8 @@ class Oracle:
 
                     pred = model.predict(test_x)
                     print "Fit '{}' -> {}: train/test {}/{}, err {}".format(
-                        idea_names[cause],
-                        vector_names[vector],
+                        Cve.Idea_Names[cause],
+                        Cve.Vector_Names[vector],
                         len(train_x),
                         len(test_x),
                         (sum(int(pred[i]) != test_y[i] for i in range(len(test_y))) / float(len(test_y))))
@@ -61,19 +60,19 @@ class Oracle:
             xrow = x[i].reshape((len(x[i]) / self.nideas, self.nideas))
             s = []
             for j in xrange(len(xrow)):
-                idea = '-' if sum(xrow[j]) < 0.01 else self.idea_names[np.argmax(xrow[j])]
+                idea = '-' if sum(xrow[j]) < 0.01 else Cve.Idea_Names[np.argmax(xrow[j])]
                 s.append(idea)
-            print s, self.idea_names[y[i]], 'cause:vector', self.idea_names[cause], self.vector_names[vector]
+            print s, Cve.Idea_Names[y[i]], 'cause:vector', Cve.Idea_Names[cause], Cve.Vector_Names[vector]
 
     def predict(self, point):
         x = self._get_oracle_input_row(point)
-        for vector in xrange(len(self.is_game_vector)):
-            if self.is_game_vector[vector]:
+        for vector in xrange(len(Cve.IsGameVector)):
+            if Cve.IsGameVector[vector]:
                 # idea 1 is the player
                 oracle = self.oracles[1][vector]
                 if oracle is not None:
                     pred = oracle.predict([x])
-                    print self.vector_names[vector], '->', self.idea_names[pred[0]]
+                    print Cve.Vector_Names[vector], '->', Cve.Idea_Names[pred[0]]
 
     def print_context(self, point):
         nvec = self.spatial_vectors_count
@@ -83,24 +82,19 @@ class Oracle:
         x = row.reshape((len(row) / nideas, nideas))
         vec = 0
         for ohe in x:
-            print ohe, ':', self.vector_names[vec], self.idea_names[np.argmax(ohe)]
+            print ohe, ':', Cve.Vector_Names[vec], Cve.Idea_Names[np.argmax(ohe)]
             vec = (vec + 1) % nvec
 
     def add_cves_to_index(self, cves):
         index = self.cves_index
         for cve in cves:
-            cause_point = cve[1]
-            if cause_point not in index:
-                index[cause_point] = []
-            index[cause_point].append(cve)
+            if cve.cause_point not in index:
+                index[cve.cause_point] = []
+            index[cve.cause_point].append(cve)
 
     def print_context_cves(self, point):
         for cve in self.cves_index[point]:
-            print "'{}' {} -> {} -> '{}' {}".format(self.idea_names[cve[0]],
-                                                    cve[1],
-                                                    self.vector_names[cve[2]],
-                                                    self.idea_names[cve[3]],
-                                                    cve[4])
+            print cve
 
     def _get_oracle_input_row(self, point):
         nvec = self.spatial_vectors_count
@@ -109,13 +103,13 @@ class Oracle:
 
         row = np.zeros(nvec * nideas * (1 + nvec), dtype=np.float32)
 
-        for cause, _, vector, effect, effect_point in cves_index[point]:
-            if not self.is_game_vector[vector]:
-                row[vector * nideas + effect] = 1
+        for cve in cves_index[point]:
+            if not Cve.IsGameVector[cve.vector]:
+                row[cve.vector * nideas + cve.effect_idea] = 1
 
-                if effect_point in cves_index:
-                    for ___, ____, vector2, effect2, _____ in cves_index[effect_point]:
-                        if not self.is_game_vector[vector2]:
-                            row[nvec * nideas * (1 + vector) + vector2 * nideas + effect2] = 1
+                if cve.effect_point in cves_index:
+                    for cve2 in cves_index[cve.effect_point]:
+                        if not Cve.IsGameVector[cve2.vector]:
+                            row[nvec * nideas * (1 + cve2.vector) + cve2.vector * nideas + cve2.effect_idea] = 1
         return row
 

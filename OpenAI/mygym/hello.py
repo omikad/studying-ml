@@ -6,11 +6,9 @@ from gym.envs.registration import register
 from mygym.oracle import Oracle
 from mygym.metaoracle import MetaOracle
 from mygym.osokoban import OsokobanEnv
+from mygym.cve import Cve
 
-Vectors = ["Left", "Up", "Right", "Down", "KeyLeft", "KeyUp", "KeyRight", "KeyDown", "KeyRestart"]
-IsGameVector = [False, False, False, False, True, True, True, True, True]
 SpatialVectorsCount = 4
-GameVectorsCount = 5
 Deltas = [(0, -1), (-1, 0), (0, 1), (1, 0)]
 
 
@@ -58,18 +56,18 @@ def play_with_user_oracle(env, history, oracle):
 
 def show_history_item(env, history_item):
     env.render_observation(history_item[0])
-    print Vectors[history_item[1]]
+    print Cve.Vector_Names[history_item[1]]
     env.render_observation(history_item[2])
 
 
 def show_abstract_cve_item(acve):
-    print "'{}' -> {} -> '{}'".format(OsokobanEnv.MapChars[acve[0]],
-                                      Vectors[acve[1]],
-                                      OsokobanEnv.MapChars[acve[2]])
+    print "'{}' -> {} -> '{}'".format(Cve.Idea_Names[acve[0]],
+                                      Cve.Vector_Names[acve[1]],
+                                      Cve.Idea_Names[acve[2]])
 
 
 def show_idea(idea):
-    print "{}: '{}'".format(idea, OsokobanEnv.MapChars[idea])
+    print "{}: '{}'".format(idea, Cve.Idea_Names[idea])
 
 
 def add_spatial_cves(env, cves, level, t):
@@ -80,7 +78,7 @@ def add_spatial_cves(env, cves, level, t):
                 delta = Deltas[k]
                 dest = (i + delta[0], j + delta[1])
                 if env.point_allowed(dest):
-                    cves.append((c, (t, i, j), k, level[dest], (t, dest[0], dest[1])))
+                    cves.append(Cve(c, (t, i, j), k, level[dest], (t, dest[0], dest[1])))
 
 
 def history_to_cves(env, history):
@@ -91,15 +89,15 @@ def history_to_cves(env, history):
         for i in xrange(cause.shape[0]):
             for j in xrange(cause.shape[1]):
                 c = cause[i, j]
-                cves.append((c, (t, i, j), vector, effect[i, j], (t + 1, i, j)))
+                cves.append(Cve(c, (t, i, j), vector, effect[i, j], (t + 1, i, j)))
     add_spatial_cves(env, cves, history[-1][2], len(history))
     return cves
 
 
 def get_abstract_cves(cves):
     abstract_cves = set()
-    for cause, cause_point, vector, effect, effect_point in cves:
-        abstract_cves.add((cause, vector, effect))
+    for cve in cves:
+        abstract_cves.add((cve.cause_idea, cve.vector, cve.effect_idea))
     return list(abstract_cves)
 
 
@@ -125,10 +123,14 @@ def play():
     print 'abstract cves:', len(abstract_cves)
     print 'ideas:', len(OsokobanEnv.MapChars)
 
-    oracle = Oracle(cves, SpatialVectorsCount, IsGameVector, Vectors, OsokobanEnv.MapChars)
+    oracle = Oracle(cves, SpatialVectorsCount)
 
     # play_with_user_oracle(env, history, oracle)
 
-    metaoracle = MetaOracle(env.MapChars, oracle, IsGameVector)
+    metaoracle = MetaOracle(env.MapChars, oracle)
 
 play()
+
+
+
+
