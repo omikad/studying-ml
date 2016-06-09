@@ -115,7 +115,7 @@ def play():
     # env.diamonds_lim = (0, 1)
     env.reset()
 
-    history = get_history(env, 100)
+    history = get_history(env, 500)
     cves = history_to_cves(env, history)
     abstract_cves = get_abstract_cves(cves)
 
@@ -124,10 +124,11 @@ def play():
     print 'ideas:', len(OsokobanEnv.MapChars)
 
     oracle = Oracle(cves, SpatialVectorsCount)
+    print
 
     # play_with_user_oracle(env, history, oracle)
 
-    metaoracle = MetaOracle(env.MapChars, oracle)
+    metaoracle = MetaOracle(oracle)
 
 play()
 
