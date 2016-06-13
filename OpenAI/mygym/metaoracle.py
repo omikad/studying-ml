@@ -10,24 +10,34 @@ class MetaOracle:
         self.idea_chars[None] = '?'
         self.oracle = oracle
         self.cves_index = oracle.cves_index
-        random_worlds = self.generate_random_worlds(10, 2)
-        self.render_world(random_worlds[0])
-        self.predict(random_worlds[0], Cve.Game_Vectors[0])
+        self.learn_meta_oracle()
 
-    def predict(self, world, vector):
-        print Cve.Vector_Names[vector], ':'
-        for cause_point, cves in world.iteritems():
+    def learn_meta_oracle(self):
+        random_worlds = self.generate_random_worlds(10, 2)
+        for world in random_worlds:
+            world_cause_points = world.cause_points()
+            original_list = world.get_ideas(world_cause_points)
+            for vector in Cve.Game_Vectors:
+                replace_list = self.predict(world, world_cause_points, vector)
+                self.render_world(random_worlds[0])
+                print Cve.Vector_Names[vector], ':'
+                self.render_world(world.replace(world_cause_points, replace_list))
+                print original_list
+                print replace_list
+                print sum(original_list[i] != replace_list[i] for i in xrange(len(original_list)))
+                return
+
+    def predict(self, world, world_cause_points, vector):
+        replace_list = []
+        for cause_point in world_cause_points:
             row = self.oracle.get_oracle_input_row(cause_point, world)
-            cause_idea = next(iter(cves)).cause_idea
+            cause_idea = next(iter(world[cause_point])).cause_idea
             prediction = self.oracle.oracles[cause_idea][vector].predict([row])[0]
-            print cause_point, Cve.Idea_Names[cause_idea], Cve.Idea_Names[prediction]
+            replace_list.append(prediction)
+        return replace_list
 
     def render_world(self, cves_index):
-        points = set()
-        for _, cves in cves_index.iteritems():
-            for cve in cves:
-                points.add(cve.cause_point)
-                points.add(cve.effect_point)
+        points = cves_index.all_points()
         minr = min((p[1] for p in points))
         minc = min((p[2] for p in points))
         maxr = max((p[1] for p in points))
@@ -46,7 +56,7 @@ class MetaOracle:
     def generate_random_worlds(self, count, width):
         random_worlds = []
 
-        cves_keys = self.cves_index.cause_points
+        cves_keys = self.cves_index.cause_points()
         points = [cves_keys[i] for i in (np.random.permutation(len(cves_keys))[:count])]
 
         for point in points:

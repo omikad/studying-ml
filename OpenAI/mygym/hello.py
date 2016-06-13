@@ -102,7 +102,7 @@ def get_abstract_cves(cves):
 
 
 def play():
-    np.random.seed(1337)
+    np.random.seed(1348) #1351
 
     register(
         id='Osokoban-v0',

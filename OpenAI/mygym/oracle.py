@@ -11,7 +11,7 @@ class Oracle:
         self.nideas = len(Cve.Idea_Names)
 
         self.cves_index = CvesIndex(cves)
-        print 'cves index:', len(self.cves_index.cause_points)
+        print 'cves index, # of causes:', len(self.cves_index.cause_points())
 
         dataset = [[{'x': [], 'y': []} for _ in Cve.Vector_Names] for __ in xrange(self.nideas)]
 
