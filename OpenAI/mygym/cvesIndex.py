@@ -1,3 +1,4 @@
+import Queue
 from mygym.cve import Cve
 
 
@@ -37,9 +38,6 @@ class CvesIndex:
                 result.add(Cve(cause_idea, cve.cause_point, cve.vector, effect_idea, cve.effect_point))
         return result
 
-    def get_ideas(self, cause_points):
-        return [next(iter(self._cause_point_index[cause_point])).cause_idea for cause_point in cause_points]
-
     def cause_points(self):
         return self._cause_point_index.keys()
 
@@ -51,9 +49,39 @@ class CvesIndex:
                 points.add(cve.effect_point)
         return points
 
-    def iterate_by_vector(self, start_point, width):
-        result = []
+    def iterate_ideas_by_vector(self, start_point, width):
+        queue = Queue.Queue()
+        queue.put((start_point, 0))
+
+        points = [start_point]
+        ideas = [next(iter(self._cause_point_index[start_point])).cause_idea]
         used_points = set()
+        used_points.add(start_point)
+
+        while not queue.empty():
+            point, dist = queue.get()
+            if dist < width:
+                next_points = [None] * len(Cve.Non_Game_Vectors)
+                next_ideas = [None] * len(Cve.Non_Game_Vectors)
+
+                if point in self._cause_point_index:
+                    for cve in self._cause_point_index[point]:
+                        next_points[cve.vector] = cve.effect_point
+                        next_ideas[cve.vector] = cve.effect_idea
+
+                    for next_point in next_points:
+                        queue.put((next_point, dist + 1))
+
+                for i in xrange(len(Cve.Non_Game_Vectors)):
+                    point = next_points[i]
+                    if point not in used_points:
+                        used_points.add(point)
+                        ideas.append(next_ideas[i])
+                        points.append(point)
+
+        return points, ideas
+
+
 
 
 

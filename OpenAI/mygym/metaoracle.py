@@ -13,27 +13,29 @@ class MetaOracle:
         self.learn_meta_oracle()
 
     def learn_meta_oracle(self):
-        random_worlds = self.generate_random_worlds(10, 2)
-        for world in random_worlds:
-            world_cause_points = world.cause_points()
-            original_list = world.get_ideas(world_cause_points)
+        for world, world_start_point in self.generate_random_worlds(10, 2):
+            world_points, world_ideas = world.iterate_ideas_by_vector(world_start_point, 2)
             for vector in Cve.Game_Vectors:
-                replace_list = self.predict(world, world_cause_points, vector)
-                self.render_world(random_worlds[0])
+                replace_list = self.predict(world, world_points, world_ideas, vector)
+                self.render_world(world)
                 print Cve.Vector_Names[vector], ':'
-                self.render_world(world.replace(world_cause_points, replace_list))
-                print original_list
+                self.render_world(world.replace(world_points, replace_list))
+                print world_ideas
                 print replace_list
-                print sum(original_list[i] != replace_list[i] for i in xrange(len(original_list)))
+                print sum(replace_list[i] != world_ideas[i] for i in xrange(len(replace_list)))
                 return
 
-    def predict(self, world, world_cause_points, vector):
+    def predict(self, world, world_points, world_ideas, vector):
         replace_list = []
-        for cause_point in world_cause_points:
-            row = self.oracle.get_oracle_input_row(cause_point, world)
-            cause_idea = next(iter(world[cause_point])).cause_idea
-            prediction = self.oracle.oracles[cause_idea][vector].predict([row])[0]
-            replace_list.append(prediction)
+        for i in xrange(len(world_points)):
+            idea = world_ideas[i]
+            if idea is not None:
+                point = world_points[i]
+                row = self.oracle.get_oracle_input_row(point, world)
+                prediction = self.oracle.oracles[idea][vector].predict([row])[0]
+                replace_list.append(prediction)
+            else:
+                replace_list.append(idea)
         return replace_list
 
     def render_world(self, cves_index):
@@ -59,6 +61,7 @@ class MetaOracle:
         cves_keys = self.cves_index.cause_points()
         points = [cves_keys[i] for i in (np.random.permutation(len(cves_keys))[:count])]
 
+        # TODO: Check dups
         for point in points:
             world = CvesIndex(None)
             stack = [point]
@@ -75,7 +78,7 @@ class MetaOracle:
                             stack.append(cve.effect_point)
                             lengths.append(cur_len + 1)
 
-            random_worlds.append(world)
+            random_worlds.append((world, point))
 
         return random_worlds
 

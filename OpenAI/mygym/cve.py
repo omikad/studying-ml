@@ -3,6 +3,7 @@ class Cve:
     Vector_Names = ["Left", "Up", "Right", "Down", "KeyLeft", "KeyUp", "KeyRight", "KeyDown", "KeyRestart"]
     IsGameVector = [False, False, False, False, True, True, True, True, True]
     Game_Vectors = [i for i in xrange(len(IsGameVector)) if IsGameVector[i]]
+    Non_Game_Vectors = [i for i in xrange(len(IsGameVector)) if not IsGameVector[i]]
 
     def __init__(self, cause_idea, cause_point, vector, effect_idea, effect_point):
         self.cause_idea = cause_idea
