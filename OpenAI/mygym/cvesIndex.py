@@ -1,4 +1,6 @@
 import Queue
+import numpy as np
+
 from mygym.cve import Cve
 
 
@@ -62,7 +64,8 @@ class CvesIndex:
             point, dist = queue.get()
             if dist < width:
                 next_points = [None] * len(Cve.Non_Game_Vectors)
-                next_ideas = [None] * len(Cve.Non_Game_Vectors)
+                next_ideas = np.zeros(len(Cve.Non_Game_Vectors))
+                next_ideas.fill(-1)
 
                 if point in self._cause_point_index:
                     for cve in self._cause_point_index[point]:
@@ -79,7 +82,7 @@ class CvesIndex:
                         ideas.append(next_ideas[i])
                         points.append(point)
 
-        return points, ideas
+        return points, np.array(ideas, dtype=np.int32)
 
 
 

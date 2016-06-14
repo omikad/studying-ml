@@ -2,6 +2,7 @@ import numpy as np
 
 from mygym.cve import Cve
 from mygym.cvesIndex import CvesIndex
+from mygym.hashableArray import HashableArray
 
 
 class MetaOracle:
@@ -13,30 +14,50 @@ class MetaOracle:
         self.learn_meta_oracle()
 
     def learn_meta_oracle(self):
-        for world, world_start_point in self.generate_random_worlds(10, 2):
+        replaces = []
+
+        for world, world_start_point in self.generate_random_worlds(5, 2):
             world_points, world_ideas = world.iterate_ideas_by_vector(world_start_point, 2)
+
+            effects = set()
+            effects.add(HashableArray(world_ideas))
+
+            self._process_world(world, world_points, world_ideas, effects, 3)
+
+            replaces.append((world, world_start_point, world_points, world_ideas, effects))
+
+            print len(effects)
+
+        # diff = [None] * 2 * len(world_ideas)
+        # for i in xrange(len(world_ideas)):
+        #     before = world_ideas[i]
+        #     after = replace_list[i]
+        #     diff[i] = before if before != after else None
+        #     diff[i + len(world_ideas)] = after if before != after else None
+        # print diff
+
+    def _process_world(self, world, world_points, world_ideas, effects, depth):
+        if depth > 0:
             for vector in Cve.Game_Vectors:
-                replace_list = self.predict(world, world_points, world_ideas, vector)
-                self.render_world(world)
-                print Cve.Vector_Names[vector], ':'
-                self.render_world(world.replace(world_points, replace_list))
-                print world_ideas
-                print replace_list
-                print sum(replace_list[i] != world_ideas[i] for i in xrange(len(replace_list)))
-                return
+                effect_ideas = self.predict(world, world_points, world_ideas, vector)
+                effect_world = world.replace(world_points, effect_ideas)
+
+                if HashableArray(effect_ideas) not in effects:
+                    effects.add(HashableArray(effect_ideas))
+                    self._process_world(effect_world, world_points, effect_ideas, effects, depth - 1)
 
     def predict(self, world, world_points, world_ideas, vector):
         replace_list = []
         for i in xrange(len(world_points)):
             idea = world_ideas[i]
-            if idea is not None:
+            if idea >= 0:
                 point = world_points[i]
                 row = self.oracle.get_oracle_input_row(point, world)
                 prediction = self.oracle.oracles[idea][vector].predict([row])[0]
                 replace_list.append(prediction)
             else:
                 replace_list.append(idea)
-        return replace_list
+        return np.array(replace_list, dtype=np.int32)
 
     def render_world(self, cves_index):
         points = cves_index.all_points()
@@ -61,7 +82,6 @@ class MetaOracle:
         cves_keys = self.cves_index.cause_points()
         points = [cves_keys[i] for i in (np.random.permutation(len(cves_keys))[:count])]
 
-        # TODO: Check dups
         for point in points:
             world = CvesIndex(None)
             stack = [point]

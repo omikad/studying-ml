@@ -100,7 +100,7 @@ class Oracle:
 
         for cve in cves_index[point]:
             if not Cve.IsGameVector[cve.vector]:
-                row[cve.vector * nideas + cve.effect_idea] = 1
+                row[(cve.vector * nideas + cve.effect_idea)] = 1
 
                 for cve2 in cves_index[cve.effect_point]:
                     if not Cve.IsGameVector[cve2.vector]:
