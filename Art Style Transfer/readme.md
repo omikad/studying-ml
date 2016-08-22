@@ -4,7 +4,7 @@ Code cloned from https://github.com/alexjc/neural-doodle
 
 ## Source images
 
-![Alt text](me.jpg "Me")
+![Alt text](me.jpeg "Me")
 ![Alt text](uae.jpg "UAE")
 
 ## Results
