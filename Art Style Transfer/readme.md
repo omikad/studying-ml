@@ -1,6 +1,6 @@
 ## Art Style Transfer
 
-Code cloned from https://github.com/alexjc/neural-doodle
+Code cloned from https://github.com/janivanecky/Artistic-Style
 
 ## Source images
 
