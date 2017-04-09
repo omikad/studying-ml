@@ -1,8 +1,8 @@
 import numpy as np
 import xgboost as xgb
-
-from mygym.cve import Cve
 from mygym.cvesIndex import CvesIndex
+
+from mygym.approach1.cve import Cve
 
 
 class Oracle:

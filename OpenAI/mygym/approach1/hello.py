@@ -1,12 +1,13 @@
 import sys
-import numpy as np
-import gym
-from gym.envs.registration import register
 
-from mygym.oracle import Oracle
-from mygym.metaoracle import MetaOracle
-from mygym.osokoban import OsokobanEnv
+import gym
+import numpy as np
+from gym.envs.registration import register
 from mygym.cve import Cve
+from mygym.oracle import Oracle
+from mygym.osokoban import OsokobanEnv
+
+from mygym.approach1.metaoracle import MetaOracle
 
 SpatialVectorsCount = 4
 Deltas = [(0, -1), (-1, 0), (0, 1), (1, 0)]
@@ -102,7 +103,7 @@ def get_abstract_cves(cves):
 
 
 def play():
-    np.random.seed(1351) #1348, 1351
+    np.random.seed(1351)    # 1348, 1351
 
     register(
         id='Osokoban-v0',

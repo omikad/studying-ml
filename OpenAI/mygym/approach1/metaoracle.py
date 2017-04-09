@@ -1,8 +1,8 @@
 import numpy as np
-
-from mygym.cve import Cve
 from mygym.cvesIndex import CvesIndex
 from mygym.hashableArray import HashableArray
+
+from mygym.approach1.cve import Cve
 
 
 class MetaOracle:
@@ -14,7 +14,8 @@ class MetaOracle:
         self.learn_meta_oracle()
 
     def learn_meta_oracle(self):
-        replaces = []
+        x = []
+        y = []
 
         for world, world_start_point in self.generate_random_worlds(5, 2):
             world_points, world_ideas = world.iterate_ideas_by_vector(world_start_point, 2)
@@ -24,9 +25,27 @@ class MetaOracle:
 
             self._process_world(world, world_points, world_ideas, effects, 3)
 
-            replaces.append((world, world_start_point, world_points, world_ideas, effects))
+            for effect in effects:
+                effect_ideas = effect.unwrap()
 
-            print len(effects)
+                self.render_world(world)
+                print world_ideas
+                print effect_ideas
+
+                nideas = len(Cve.Idea_Names)
+                nhalf = len(world_ideas) * nideas
+                row = np.zeros(2 * nhalf)
+                for i in xrange(len(world_ideas)):
+                    before = world_ideas[i]
+                    after = effect_ideas[i]
+                    if before != after:
+                        row[i * nideas + before] = 1
+                        row[nhalf + i * nideas + after] = 1
+
+                print row
+                print len(row)
+
+                return
 
         # diff = [None] * 2 * len(world_ideas)
         # for i in xrange(len(world_ideas)):

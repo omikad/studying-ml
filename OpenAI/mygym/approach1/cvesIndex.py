@@ -1,7 +1,8 @@
 import Queue
+
 import numpy as np
 
-from mygym.cve import Cve
+from mygym.approach1.cve import Cve
 
 
 class CvesIndex:
