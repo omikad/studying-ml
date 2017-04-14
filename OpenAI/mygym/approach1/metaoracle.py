@@ -1,6 +1,6 @@
 import numpy as np
-from mygym.cvesIndex import CvesIndex
-from mygym.hashableArray import HashableArray
+from mygym.approach1.cvesIndex import CvesIndex
+from mygym.approach1.hashableArray import HashableArray
 
 from mygym.approach1.cve import Cve
 

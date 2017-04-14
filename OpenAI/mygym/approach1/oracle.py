@@ -1,6 +1,6 @@
 import numpy as np
 import xgboost as xgb
-from mygym.cvesIndex import CvesIndex
+from mygym.approach1.cvesIndex import CvesIndex
 
 from mygym.approach1.cve import Cve
 

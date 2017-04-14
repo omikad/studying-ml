@@ -3,9 +3,9 @@ import sys
 import gym
 import numpy as np
 from gym.envs.registration import register
-from mygym.cve import Cve
-from mygym.oracle import Oracle
-from mygym.osokoban import OsokobanEnv
+from mygym.approach1.cve import Cve
+from mygym.approach1.oracle import Oracle
+from mygym.approach1.osokoban import OsokobanEnv
 
 from mygym.approach1.metaoracle import MetaOracle
 
