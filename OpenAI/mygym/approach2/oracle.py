@@ -4,22 +4,20 @@ from sklearn.metrics import mean_squared_error
 
 
 class Oracle:
-    def __init__(self, gen, cves, oracles):
-        if len(cves) == 0:
-            raise RuntimeError("Can't create oracle without data")
-
-        first_effect = cves[0][1]
+    def __init__(self, gen, dataset, oracles):
         sub_oracles = [o for o in oracles if o.gen < gen]
 
         self.gen = gen
-        self.target_index = np.random.randint(0, len(first_effect))
-        self.oracles = np.random.choice(sub_oracles, replace=False) if len(sub_oracles) > 0 else []
+        self.target_index = np.random.randint(0, dataset.output.shape[1])
+        self.oracles = \
+            np.random.choice(sub_oracles, size=np.random.randint(0, len(sub_oracles)), replace=False) if len(sub_oracles) > 0 \
+            else []
         self.model = xgb.XGBClassifier(n_estimators=20)
-        self.train(cves)
+        self.train(dataset)
 
-    def train(self, cves):
-        train_x = np.array([x for x, y in cves])
-        train_y = np.array([y[self.target_index] for x, y in cves])
+    def train(self, dataset):
+        train_x = self._get_x(dataset)
+        train_y = dataset.output[:, self.target_index]
 
         self.model.fit(train_x, train_y)
 
@@ -31,5 +29,20 @@ class Oracle:
             len(train_x),
             mean_squared_error(train_y, pred)))
 
-    def predict(self, cve):
-        return self.model.predict(cve[0])
+    def predict(self, dataset):
+        x = self._get_x(dataset)
+        return self.model.predict(x)
+
+    def _get_x(self, dataset):
+        if len(self.oracles) == 0:
+            return dataset.input
+
+        sub_oracle_indexes = [dataset.oracle_indexes[o] for o in self.oracles]
+
+        return np.concatenate((dataset.input, dataset.oracle_predictions[:, sub_oracle_indexes]), axis=1)
+
+    def __repr__(self):
+        return "(Oracle gen {}, sub oracles {}, target {})".format(
+            self.gen,
+            len(self.oracles),
+            self.target_index)
