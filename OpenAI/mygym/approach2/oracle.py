@@ -21,17 +21,21 @@ class Oracle:
 
         self.model.fit(train_x, train_y)
 
-        pred = self.model.predict(train_x)
-        # print(train_y)
-        # print(pred)
-        print("Target index {}, fit train size {}, train err {}".format(
-            self.target_index,
-            len(train_x),
-            mean_squared_error(train_y, pred)))
+    def fitness(self, dataset):
+        x = self._get_x(dataset)
+        y = dataset.output[:, self.target_index]
+        pred = self.model.predict(x)
+        return mean_squared_error(y, pred)
 
     def predict(self, dataset):
         x = self._get_x(dataset)
         return self.model.predict(x)
+
+    def enumerate_oracles(self):
+        yield self
+        for oracle in self.oracles:
+            for sub_oracle in oracle.enumerate_oracles():
+                yield sub_oracle
 
     def _get_x(self, dataset):
         if len(self.oracles) == 0:
