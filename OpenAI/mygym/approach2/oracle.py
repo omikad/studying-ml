@@ -16,19 +16,23 @@ class Oracle:
         self.train(dataset)
 
     def train(self, dataset):
-        train_x = self._get_x(dataset)
+        train_x = self._get_x_dataset(dataset)
         train_y = dataset.output[:, self.target_index]
 
         self.model.fit(train_x, train_y)
 
     def fitness(self, dataset):
-        x = self._get_x(dataset)
+        x = self._get_x_dataset(dataset)
         y = dataset.output[:, self.target_index]
         pred = self.model.predict(x)
         return mean_squared_error(y, pred)
 
-    def predict(self, dataset):
-        x = self._get_x(dataset)
+    def predict_dataset(self, dataset):
+        x = self._get_x_dataset(dataset)
+        return self.model.predict(x)
+
+    def predict(self, cause_input, oracle_predictions, oracle_indexes):
+        x = self._get_x(cause_input, oracle_predictions, oracle_indexes)
         return self.model.predict(x)
 
     def enumerate_oracles(self):
@@ -37,13 +41,16 @@ class Oracle:
             for sub_oracle in oracle.enumerate_oracles():
                 yield sub_oracle
 
-    def _get_x(self, dataset):
+    def _get_x_dataset(self, dataset):
+        return self._get_x(dataset.input, dataset.oracle_predictions, dataset.oracle_indexes)
+
+    def _get_x(self, cause_input, oracle_predictions, oracle_indexes):
         if len(self.oracles) == 0:
-            return dataset.input
+            return cause_input
 
-        sub_oracle_indexes = [dataset.oracle_indexes[o] for o in self.oracles]
+        sub_oracle_indexes = [oracle_indexes[o] for o in self.oracles]
 
-        return np.concatenate((dataset.input, dataset.oracle_predictions[:, sub_oracle_indexes]), axis=1)
+        return np.concatenate((cause_input, oracle_predictions[:, sub_oracle_indexes]), axis=1)
 
     def __repr__(self):
         return "(Oracle gen {}, sub oracles {}, target {})".format(

@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Dataset:
-    # Must sure oracles sorted by gen
+    # Must be sure oracles sorted by gen
     def __init__(self, cves, oracles):
         if len(cves) == 0:
             raise RuntimeError("Can't create dataset")
@@ -10,6 +10,7 @@ class Dataset:
         first_cause, first_vector, first_effect = cves[0]
 
         self.cause_len = len(first_cause)
+        self.effect_len = len(first_effect)
         self.action_index = len(first_cause)
 
         self.input = np.ndarray((len(cves), len(first_cause) + 1))
@@ -29,7 +30,7 @@ class Dataset:
 
         self.oracle_indexes = {oracles[i]: i for i in range(len(oracles))}
         for j in range(len(oracles)):
-            self.oracle_predictions[:, j] = oracles[j].predict(self)
+            self.oracle_predictions[:, j] = oracles[j].predict_dataset(self)
 
     def __repr__(self):
         return "(Dataset input {}, oracle predictions {}, output {})".format(
