@@ -12,7 +12,7 @@ class Oracle:
         self.oracles = \
             np.random.choice(sub_oracles, size=np.random.randint(0, len(sub_oracles)), replace=False) if len(sub_oracles) > 0 \
             else []
-        self.model = xgb.XGBClassifier(n_estimators=20)
+        self.model = xgb.XGBClassifier(n_estimators=10)
         self.train(dataset)
 
     def train(self, dataset):

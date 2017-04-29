@@ -8,7 +8,10 @@ from mygym.approach2.dataset import Dataset
 from mygym.approach2.oracle import Oracle
 
 
-def pick_action(best_oracle, cause):
+def pick_action(cause, best_oracle):
+    if best_oracle is None or np.random.rand() > 0.1:
+        return env.action_space.sample()
+
     cause_input = np.tile(list(cause) + [0], (len(env_actions), 1))
     cause_input[:, len(cause)] = env_actions
 
@@ -28,11 +31,9 @@ def play(frames, cause, cves, best_oracle, render=True):
         if render:
             env.render()
 
-        action = env.action_space.sample()
-        # action = env.action_space.sample() if best_oracle is None else pick_action(best_oracle, cause)
+        action = pick_action(cause, best_oracle)
 
         effect, reward, done, info = env.step(action)
-        print(action, reward, done)
         cves.append((cause, action, np.concatenate((effect, [reward, 1.0 if done else 0.0]))))
         cause = effect
         if done:
@@ -52,7 +53,7 @@ def advance_oracles(dataset, oracles):
         fitness = oracle.fitness(dataset)
         groups[oracle.target_index].append((oracle, fitness))
 
-    # In effect, last two columns are reward, done
+    # In effect, last two columns are (reward, done)
     done_index = dataset.effect_len - 1
     best_oracle = None
 
