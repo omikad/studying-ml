@@ -9,10 +9,10 @@ class ReceptiveField:
         self.depth = len(lines) - 1
 
     def get_input(self, cves, oracle_predictions, oracle_indexes):
-        result = np.zeros((len(cves) - self.depth, self.input_size))
+        result = np.zeros((len(cves), self.input_size))
 
-        for row in range(result.shape[0]):
-            input_row = row + self.depth
+        for row in range(self.depth, result.shape[0]):
+            input_row = row
             output_index = 0
             for dx, width in self.lines:
                 cause, action, effect = cves[input_row]
@@ -32,7 +32,7 @@ class ReceptiveField:
                 input_row -= 1
 
             for oracle in self.oracles:
-                result[row, output_index] = oracle_predictions[row + self.depth, oracle_indexes[oracle]]
+                result[row, output_index] = oracle_predictions[row, oracle_indexes[oracle]]
                 output_index += 1
 
         return result

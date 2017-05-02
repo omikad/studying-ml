@@ -45,11 +45,11 @@ class ReceptiveFieldTester(unittest.TestCase):
                 ([4, 5, 6, 7], 11, [26, 27, 28, 29, 30, 31])]
 
         np.testing.assert_array_equal(
-            [[4, 5, 6, 7, 11, 0, 1, 2, 3, 10]],
+            [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [4, 5, 6, 7, 11, 0, 1, 2, 3, 10]],
             ReceptiveField([(0, 5), (0, 5)], []).get_input(cves, None, None))
 
         np.testing.assert_array_equal(
-            [[5, 6, 7, 11, 2, 3]],
+            [[0, 0, 0, 0, 0, 0], [5, 6, 7, 11, 2, 3]],
             ReceptiveField([(1, 4), (2, 2)], []).get_input(cves, None, None))
 
     def test_complex_lines(self):
@@ -59,11 +59,11 @@ class ReceptiveFieldTester(unittest.TestCase):
                 ([12, 13, 14, 15], 103, [38, 39, 40, 41, 42, 43])]
 
         np.testing.assert_array_equal(
-            [[12, 9, 10, 6, 7, 101, 100]],
+            [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [12, 9, 10, 6, 7, 101, 100]],
             ReceptiveField([(0, 1), (1, 2), (2, 3), (4, 1)], []).get_input(cves, None, None))
 
         np.testing.assert_array_equal(
-            [[6, 7, 101, 1, 2, 3, 100], [10, 11, 102, 5, 6, 7, 101], [14, 15, 103, 9, 10, 11, 102]],
+            [[0, 0, 0, 0, 0, 0, 0], [6, 7, 101, 1, 2, 3, 100], [10, 11, 102, 5, 6, 7, 101], [14, 15, 103, 9, 10, 11, 102]],
             ReceptiveField([(2, 3), (1, 4)], []).get_input(cves, None, None))
 
     def test_oracles_simple(self):
@@ -91,7 +91,7 @@ class ReceptiveFieldTester(unittest.TestCase):
         oracle_predictions = np.array([[500, 501, 502], [503, 504, 505], [506, 507, 508], [509, 510, 511]])
 
         np.testing.assert_array_equal(
-            [[4, 5, 3, 100, 505, 504], [8, 9, 7, 101, 508, 507], [12, 13, 11, 102, 511, 510]],
+            [[0, 0, 0, 0, 0, 0], [4, 5, 3, 100, 505, 504], [8, 9, 7, 101, 508, 507], [12, 13, 11, 102, 511, 510]],
             ReceptiveField([(0, 2), (3, 2)], ['gamma', 'beta']).get_input(cves, oracle_predictions, oracle_indexes))
 
 

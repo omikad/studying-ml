@@ -6,31 +6,47 @@ from mygym.approach3.receptive_field import ReceptiveField
 
 
 class Oracle:
-    def __init__(self, gen, cves, oracles):
-        sub_oracles = [o for o in oracles if o.gen < gen]
-
+    def __init__(self, epoch, cves, oracles, max_sub_oracles):
         cause, action, effect = cves[0]
 
-        self.gen = gen
+        self.epoch = epoch
         self.target_index = np.random.randint(0, len(effect))
-        self.oracles = \
-            np.random.choice(sub_oracles, size=np.random.randint(0, len(sub_oracles)), replace=False) \
-            if len(sub_oracles) > 0 \
+
+        sub_oracles = min(len(oracles), np.random.randint(0, max_sub_oracles))
+        self.oracles = np.random.choice(oracles, size=sub_oracles, replace=False) \
+            if len(oracles) > 0 \
             else []
-        self.receptive_field = ReceptiveField([(0, len(cause) + 1)], self.oracles)
+
+        cause_len = len(cause) + 1
+        depth = np.random.randint(1, 4)
+        field_scheme = [(0, cause_len) for _ in range(depth)]
+
+        self.receptive_field = ReceptiveField(field_scheme, self.oracles)
         self.model = xgb.XGBClassifier(n_estimators=10)
+        self.last_fitness = 0
 
     def train(self, cves, oracle_predictions, oracle_indexes):
+        train_boundary = int(len(cves) * 0.8)
         x = self.receptive_field.get_input(cves, oracle_predictions, oracle_indexes)
-        y = [e[self.target_index] for c,v,e in cves[self.receptive_field.depth:]]
-        self.model.fit(x, y)
+        y = np.array([e[self.target_index] for c, v, e in cves])
+        self.model.fit(x[:train_boundary], y[:train_boundary])
         pred = self.model.predict(x)
-        self.last_fitness = mean_squared_error(y, pred)
-        return pred
+        self.last_fitness = mean_squared_error(y[train_boundary:], pred[train_boundary:])
+        diff = np.abs(pred - y) / (1 + np.sum(pred - y))
+        return pred, diff
+
+    def size(self):
+        return self.receptive_field.input_size + len(self.oracles)
+
+    def enumerate_oracles(self):
+        yield self
+        for oracle in self.oracles:
+            for sub_oracle in oracle.enumerate_oracles():
+                yield sub_oracle
 
     def __repr__(self):
-        return "(Oracle gen {}, sub oracles {}, target {}, receptive {}, fitness {})".format(
-            self.gen,
+        return "(Oracle epoch {}, sub oracles {}, target {}, receptive {}, fitness {})".format(
+            self.epoch,
             len(self.oracles),
             self.target_index,
             self.receptive_field.input_size,
