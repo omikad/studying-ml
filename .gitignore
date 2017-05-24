@@ -2,8 +2,8 @@
 *.RData
 
 # User-specific stuff:
-*/.idea/
+**/.idea/
 *.pyc
 
 
-
+**/.ipynb_checkpoints/
