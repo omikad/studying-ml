@@ -1,0 +1,231 @@
+Environment: CartPole-v1
+Iterations: 10K
+Epsilon min: 0.05
+Epsilon decay: .9995
+Memory: 5K
+Seed: 1337
+Penalty when done: -10
+Formula: target[action] = target[action] + self.learning_rate * (reward + self.gamma * np.amax(self.model.predict(next_state)[0] - target[action]))
+
+episode: 500/10000, avg score: 24.0, exploration rate: 0.78
+episode: 1000/10000, avg score: 27.0, exploration rate: 0.61
+episode: 1500/10000, avg score: 81.0, exploration rate: 0.47
+episode: 2000/10000, avg score: 299.0, exploration rate: 0.37
+episode: 2500/10000, avg score: 290.0, exploration rate: 0.29
+episode: 3000/10000, avg score: 196.0, exploration rate: 0.22
+episode: 3500/10000, avg score: 498.0, exploration rate: 0.17
+episode: 4000/10000, avg score: 312.0, exploration rate: 0.14
+episode: 4500/10000, avg score: 188.0, exploration rate: 0.11
+episode: 5000/10000, avg score: 498.0, exploration rate: 0.082
+episode: 5500/10000, avg score: 162.0, exploration rate: 0.064
+episode: 6000/10000, avg score: 484.0, exploration rate: 0.05
+episode: 6500/10000, avg score: 380.0, exploration rate: 0.05
+episode: 7000/10000, avg score: 449.0, exploration rate: 0.05
+episode: 7500/10000, avg score: 136.0, exploration rate: 0.05
+episode: 8000/10000, avg score: 256.0, exploration rate: 0.05
+episode: 8500/10000, avg score: 35.0, exploration rate: 0.05
+episode: 9000/10000, avg score: 65.0, exploration rate: 0.05
+episode: 9500/10000, avg score: 498.0, exploration rate: 0.05
+episode: 10000/10000, avg score: 498.0, exploration rate: 0.05
+nobs=100, minmax=(499, 499), mean=499.0, variance=0.0
+
+
+
+Environment: CartPole-v1
+Iterations: 10K
+Epsilon min: 0.05
+Epsilon decay: .9995
+Memory: 5K
+Seed: 1337
+Penalty when done: -10
+Formula: target[action] = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
+
+episode: 500/10000, avg score: 23.0, exploration rate: 0.78
+episode: 1000/10000, avg score: 62.0, exploration rate: 0.61
+episode: 1500/10000, avg score: 76.0, exploration rate: 0.47
+episode: 2000/10000, avg score: 13.0, exploration rate: 0.37
+episode: 2500/10000, avg score: 65.0, exploration rate: 0.29
+episode: 3000/10000, avg score: 174.0, exploration rate: 0.22
+episode: 3500/10000, avg score: 119.0, exploration rate: 0.17
+episode: 4000/10000, avg score: 128.0, exploration rate: 0.14
+episode: 4500/10000, avg score: 171.0, exploration rate: 0.11
+episode: 5000/10000, avg score: 169.0, exploration rate: 0.082
+episode: 5500/10000, avg score: 229.0, exploration rate: 0.064
+episode: 6000/10000, avg score: 141.0, exploration rate: 0.05
+episode: 6500/10000, avg score: 209.0, exploration rate: 0.05
+episode: 7000/10000, avg score: 86.0, exploration rate: 0.05
+episode: 7500/10000, avg score: 106.0, exploration rate: 0.05
+episode: 8000/10000, avg score: 115.0, exploration rate: 0.05
+episode: 8500/10000, avg score: 112.0, exploration rate: 0.05
+episode: 9000/10000, avg score: 141.0, exploration rate: 0.05
+episode: 9500/10000, avg score: 134.0, exploration rate: 0.05
+episode: 10000/10000, avg score: 374.0, exploration rate: 0.05
+nobs=100, minmax=(268, 499), mean=350.20999999999998, variance=2894.6524242424239
+
+
+
+Environment: CartPole-v1
+Iterations: 10K
+Epsilon min: 0.05
+Epsilon decay: .9995
+Memory: 5K
+Seed: 1337
+Penalty when done: 0
+Formula: target[action] = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
+
+episode: 500/10000, avg score: 23.0, exploration rate: 0.78
+episode: 1000/10000, avg score: 28.0, exploration rate: 0.61
+episode: 1500/10000, avg score: 10.0, exploration rate: 0.47
+episode: 2000/10000, avg score: 23.0, exploration rate: 0.37
+episode: 2500/10000, avg score: 124.0, exploration rate: 0.29
+episode: 3000/10000, avg score: 147.0, exploration rate: 0.22
+episode: 3500/10000, avg score: 169.0, exploration rate: 0.17
+episode: 4000/10000, avg score: 149.0, exploration rate: 0.14
+episode: 4500/10000, avg score: 135.0, exploration rate: 0.11
+episode: 5000/10000, avg score: 38.0, exploration rate: 0.082
+episode: 5500/10000, avg score: 498.0, exploration rate: 0.064
+episode: 6000/10000, avg score: 498.0, exploration rate: 0.05
+episode: 6500/10000, avg score: 498.0, exploration rate: 0.05
+episode: 7000/10000, avg score: 498.0, exploration rate: 0.05
+episode: 7500/10000, avg score: 498.0, exploration rate: 0.05
+episode: 8000/10000, avg score: 498.0, exploration rate: 0.05
+episode: 8500/10000, avg score: 498.0, exploration rate: 0.05
+episode: 9000/10000, avg score: 498.0, exploration rate: 0.05
+episode: 9500/10000, avg score: 498.0, exploration rate: 0.05
+episode: 10000/10000, avg score: 165.0, exploration rate: 0.05
+nobs=100, minmax=(7, 10), mean=8.2899999999999991, variance=0.55141414141414136
+
+
+
+Environment: CartPole-v1
+Iterations: 10K
+Epsilon min: 0.05
+Epsilon decay: .9995
+Memory: 10K
+Seed: 1337
+Penalty when done: 0
+Formula: target[action] = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
+
+episode: 500/10000, avg score: 11.0, exploration rate: 0.78
+episode: 1000/10000, avg score: 11.0, exploration rate: 0.61
+episode: 1500/10000, avg score: 7.0, exploration rate: 0.47
+episode: 2000/10000, avg score: 29.0, exploration rate: 0.37
+episode: 2500/10000, avg score: 14.0, exploration rate: 0.29
+episode: 3000/10000, avg score: 10.0, exploration rate: 0.22
+episode: 3500/10000, avg score: 66.0, exploration rate: 0.17
+episode: 4000/10000, avg score: 98.0, exploration rate: 0.14
+episode: 4500/10000, avg score: 103.0, exploration rate: 0.11
+episode: 5000/10000, avg score: 498.0, exploration rate: 0.082
+episode: 5500/10000, avg score: 498.0, exploration rate: 0.064
+episode: 6000/10000, avg score: 498.0, exploration rate: 0.05
+episode: 6500/10000, avg score: 498.0, exploration rate: 0.05
+episode: 7000/10000, avg score: 498.0, exploration rate: 0.05
+episode: 7500/10000, avg score: 498.0, exploration rate: 0.05
+episode: 8000/10000, avg score: 498.0, exploration rate: 0.05
+episode: 8500/10000, avg score: 498.0, exploration rate: 0.05
+episode: 9000/10000, avg score: 498.0, exploration rate: 0.05
+episode: 9500/10000, avg score: 142.0, exploration rate: 0.05
+episode: 10000/10000, avg score: 92.0, exploration rate: 0.05
+nobs=100, minmax=(48, 97), mean=67.629999999999995, variance=117.50818181818181
+
+
+
+Environment: CartPole-v1
+Iterations: 10K
+Epsilon min: 0.05
+Epsilon decay: .9995
+Memory: 10K
+Seed: 2667
+Penalty when done: 0
+Formula: target[action] = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
+
+episode: 500/10000, avg score: 29.0, exploration rate: 0.78
+episode: 1000/10000, avg score: 70.0, exploration rate: 0.61
+episode: 1500/10000, avg score: 13.0, exploration rate: 0.47
+episode: 2000/10000, avg score: 167.0, exploration rate: 0.37
+episode: 2500/10000, avg score: 18.0, exploration rate: 0.29
+episode: 3000/10000, avg score: 137.0, exploration rate: 0.22
+episode: 3500/10000, avg score: 226.0, exploration rate: 0.17
+episode: 4000/10000, avg score: 200.0, exploration rate: 0.14
+episode: 4500/10000, avg score: 68.0, exploration rate: 0.11
+episode: 5000/10000, avg score: 176.0, exploration rate: 0.082
+episode: 5500/10000, avg score: 153.0, exploration rate: 0.064
+episode: 6000/10000, avg score: 275.0, exploration rate: 0.05
+episode: 6500/10000, avg score: 151.0, exploration rate: 0.05
+episode: 7000/10000, avg score: 33.0, exploration rate: 0.05
+episode: 7500/10000, avg score: 122.0, exploration rate: 0.05
+episode: 8000/10000, avg score: 84.0, exploration rate: 0.05
+episode: 8500/10000, avg score: 136.0, exploration rate: 0.05
+episode: 9000/10000, avg score: 12.0, exploration rate: 0.05
+episode: 9500/10000, avg score: 114.0, exploration rate: 0.05
+episode: 10000/10000, avg score: 150.0, exploration rate: 0.05
+nobs=100, minmax=(173, 239), mean=201.97, variance=176.55464646464642
+
+
+
+Environment: CartPole-v1
+Iterations: 10K
+Epsilon min: 0.05
+Epsilon decay: .9995
+Memory: 10K
+Seed: 1337
+Penalty when done: 0
+Formula: target[action] = target[action] + self.learning_rate * (reward + self.gamma * np.amax(self.model.predict(next_state)[0] - target[action]))
+
+episode: 500/10000, avg score: 69.0, exploration rate: 0.78
+episode: 1000/10000, avg score: 142.0, exploration rate: 0.61
+episode: 1500/10000, avg score: 185.0, exploration rate: 0.47
+episode: 2000/10000, avg score: 93.0, exploration rate: 0.37
+episode: 2500/10000, avg score: 12.0, exploration rate: 0.29
+episode: 3000/10000, avg score: 429.0, exploration rate: 0.22
+episode: 3500/10000, avg score: 168.0, exploration rate: 0.17
+episode: 4000/10000, avg score: 498.0, exploration rate: 0.14
+episode: 4500/10000, avg score: 104.0, exploration rate: 0.11
+episode: 5000/10000, avg score: 8.0, exploration rate: 0.082
+episode: 5500/10000, avg score: 7.0, exploration rate: 0.064
+episode: 6000/10000, avg score: 22.0, exploration rate: 0.05
+episode: 6500/10000, avg score: 8.0, exploration rate: 0.05
+episode: 7000/10000, avg score: 9.0, exploration rate: 0.05
+episode: 7500/10000, avg score: 8.0, exploration rate: 0.05
+episode: 8000/10000, avg score: 10.0, exploration rate: 0.05
+episode: 8500/10000, avg score: 7.0, exploration rate: 0.05
+episode: 9000/10000, avg score: 11.0, exploration rate: 0.05
+episode: 9500/10000, avg score: 9.0, exploration rate: 0.05
+episode: 10000/10000, avg score: 11.0, exploration rate: 0.05
+nobs=100, minmax=(7, 25), mean=8.9499999999999993, variance=11.30050505050505
+
+
+
+Environment: CartPole-v1
+Iterations: 10K
+Epsilon min: 0.05
+Epsilon decay: .9995
+Memory: 10K
+Seed: 2667
+Penalty when done: 0
+Formula: target[action] = target[action] + self.learning_rate * (reward + self.gamma * np.amax(self.model.predict(next_state)[0] - target[action]))
+
+episode: 500/10000, avg score: 15.0, exploration rate: 0.78
+episode: 1000/10000, avg score: 19.0, exploration rate: 0.61
+episode: 1500/10000, avg score: 255.0, exploration rate: 0.47
+episode: 2000/10000, avg score: 202.0, exploration rate: 0.37
+episode: 2500/10000, avg score: 498.0, exploration rate: 0.29
+episode: 3000/10000, avg score: 498.0, exploration rate: 0.22
+episode: 3500/10000, avg score: 498.0, exploration rate: 0.17
+episode: 4000/10000, avg score: 498.0, exploration rate: 0.14
+episode: 4500/10000, avg score: 498.0, exploration rate: 0.11
+episode: 5000/10000, avg score: 498.0, exploration rate: 0.082
+episode: 5500/10000, avg score: 187.0, exploration rate: 0.064
+episode: 6000/10000, avg score: 498.0, exploration rate: 0.05
+episode: 6500/10000, avg score: 498.0, exploration rate: 0.05
+episode: 7000/10000, avg score: 498.0, exploration rate: 0.05
+episode: 7500/10000, avg score: 498.0, exploration rate: 0.05
+episode: 8000/10000, avg score: 498.0, exploration rate: 0.05
+episode: 8500/10000, avg score: 498.0, exploration rate: 0.05
+episode: 9000/10000, avg score: 498.0, exploration rate: 0.05
+episode: 9500/10000, avg score: 220.0, exploration rate: 0.05
+episode: 10000/10000, avg score: 498.0, exploration rate: 0.05
+nobs=100, minmax=(206, 499), mean=487.75, variance=1871.0580808080808
+
+
+
