@@ -15,7 +15,7 @@ def train_discounted(env, agent, params):
         replays = []
         
         for frame in range(params.max_frame_in_episode):
-            action = agent.act(state)
+            action = agent.act(state, frame)
             next_state, _, done, _ = env.step(action)
             next_state = np.reshape(next_state, [1, params.state_size])
     
@@ -34,14 +34,14 @@ def train_discounted(env, agent, params):
 #             reward_value = reward_value * params.gamma + predicted[index, action]
 #             agent.remember(state, action, reward_value, next_state)
         
-        for index, replay in enumerate(replays):
+        for frame, replay in enumerate(replays):
             state, action, next_state = replay
-            reward_value = len(replays) - index
+            reward_value = len(replays) - frame
             agent.remember(state, action, reward_value, next_state)
             
         rewards.append(len(replays))
             
-        if (episode + 1) % (params.episodes_count / 20) == 0:
+        if (episode + 1) % max(1, (params.episodes_count / 20)) == 0:
             print("episode: {}/{}, reward {}, exploration rate: {:.2}"
               .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), params.epsilon))
             
@@ -66,7 +66,7 @@ def train_reward_is_time(env, agent, params):
         replays = []
         
         for frame in range(params.max_frame_in_episode):
-            action = agent.act(state)
+            action = agent.act(state, frame)
             next_state, _, done, _ = env.step(action)
             next_state = np.reshape(next_state, [1, params.state_size])
     
@@ -84,7 +84,7 @@ def train_reward_is_time(env, agent, params):
             
         rewards.append(len(replays))
             
-        if (episode + 1) % (params.episodes_count / 20) == 0:
+        if (episode + 1) % max(1, (params.episodes_count / 20)) == 0:
             print("episode: {}/{}, reward {}, exploration rate: {:.2}"
               .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), params.epsilon))
             
@@ -104,7 +104,7 @@ def train(env, agent, params):
         total_reward = 0.0
         
         for frame in range(params.max_frame_in_episode):
-            action = agent.act(state)
+            action = agent.act(state, frame)
             next_state, reward, done, _ = env.step(action)
             next_state = np.reshape(next_state, [1, params.state_size])
     
@@ -123,7 +123,7 @@ def train(env, agent, params):
         
         rewards.append(total_reward)
             
-        if (episode + 1) % (params.episodes_count / 20) == 0:
+        if (episode + 1) % max(1, (params.episodes_count / 20)) == 0:
             print("episode: {}/{}, reward {}, exploration rate: {:.2}"
               .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), params.epsilon))
             
