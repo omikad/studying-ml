@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import stats
 
 # TODO: Fix
 def train_discounted(env, agent, params):
@@ -99,7 +100,7 @@ def train(env, agent, params):
     rewards = []
     
     for episode in range(params.episodes_count):
-        state = np.reshape(env.reset(), [1, params.state_size])        
+        state = np.reshape(env.reset(), [1, params.state_size])  
 
         total_reward = 0.0
         
@@ -125,7 +126,7 @@ def train(env, agent, params):
             
         if (episode + 1) % max(1, (params.episodes_count / 20)) == 0:
             print("episode: {}/{}, reward {}, exploration rate: {:.2}"
-              .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), params.epsilon))
+                .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), params.epsilon))
             
         if (episode + 1) % params.episodes_between_think == 0:
             agent.think(32)
