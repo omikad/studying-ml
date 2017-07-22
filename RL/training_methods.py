@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import stats
 
-def train_discounted_rewards(env, agent, params):
+def train_discounted_rewards(env, agent, params, normalize_rewards):
     rewards = []
     
     for episode in range(params.episodes_count):
@@ -24,10 +24,20 @@ def train_discounted_rewards(env, agent, params):
 
         rewards.append(total_reward)
 
+        episode_rewards = np.zeros(len(replays))
         discounted_reward = 0.0
-        for frame, state, action, reward, next_state in reversed(replays):
+        for i in reversed(range(len(replays))):
+            reward = replays[i][3]
             discounted_reward = reward + discounted_reward * params.gamma
-            agent.remember(state, action, discounted_reward, next_state, frame)
+            episode_rewards[i] = discounted_reward
+
+        if normalize_rewards:
+            episode_rewards -= np.mean(episode_rewards)
+            episode_rewards /= np.std(episode_rewards)
+
+        for i in range(len(replays)):
+            frame, state, action, _, next_state = replays[i]
+            agent.remember(state, action, episode_rewards[i], next_state, frame)
 
         if (episode + 1) % max(1, (params.episodes_count / 20)) == 0:
             print("episode: {}/{}, reward {}, exploration rate: {:.2}"
