@@ -5,14 +5,14 @@ def train_discounted_rewards(env, agent, params, normalize_rewards):
     rewards = []
     
     for episode in range(params.episodes_count):
-        state = env.reset()
+        state = env_reset(env)
         total_reward = 0.0
         
         replays = []
         
         for frame in range(params.max_frame_in_episode):
             action = agent.act(state, frame)
-            next_state, reward, done, _ = env.step(action)
+            next_state, reward, done, _ = env_step(env, action)
 
             total_reward += reward
     
@@ -40,8 +40,8 @@ def train_discounted_rewards(env, agent, params, normalize_rewards):
             agent.remember(state, action, episode_rewards[i], next_state, frame)
 
         if (episode + 1) % max(1, (params.episodes_count / 20)) == 0:
-            print("episode: {}/{}, reward {}, exploration rate: {:.2}"
-              .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), params.epsilon))
+            print("episode: {}/{}, reward {}, frames {}, exploration rate: {:.2}"
+                .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), len(replays), params.epsilon))
             
         if (episode + 1) % params.episodes_between_think == 0:
             agent.think(32)
@@ -55,13 +55,13 @@ def train_reward_is_time(env, agent, params):
     rewards = []
     
     for episode in range(params.episodes_count):
-        state = env.reset()
+        state = env_reset(env)
         
         replays = []
         
         for frame in range(params.max_frame_in_episode):
             action = agent.act(state, frame)
-            next_state, _, done, _ = env.step(action)
+            next_state, _, done, _ = env_step(env, action)
 
             if done:
                 break
@@ -77,8 +77,8 @@ def train_reward_is_time(env, agent, params):
             agent.remember(state, action, reward_value, next_state, frame)
             
         if (episode + 1) % max(1, (params.episodes_count / 20)) == 0:
-            print("episode: {}/{}, reward {}, exploration rate: {:.2}"
-              .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), params.epsilon))
+            print("episode: {}/{}, reward {}, frames {}, exploration rate: {:.2}"
+                .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), len(replays), params.epsilon))
             
         if (episode + 1) % params.episodes_between_think == 0:
             agent.think(32)
@@ -91,12 +91,12 @@ def train(env, agent, params):
     rewards = []
     
     for episode in range(params.episodes_count):
-        state = env.reset()
+        state = env_reset(env)
         total_reward = 0.0
         
         for frame in range(params.max_frame_in_episode):
             action = agent.act(state, frame)
-            next_state, reward, done, _ = env.step(action)
+            next_state, reward, done, _ = env_step(env, action)
     
             total_reward += reward
     
@@ -124,3 +124,20 @@ def train(env, agent, params):
 
     return agent, rewards
 
+def evaluate(env, agent, params, frames):
+    state = env_reset(env)
+    total_reward = 0
+    for e in range(frames):
+        action = agent.act_greedy(state, e)
+        state, reward, done, _ = env_step(env, action)
+        total_reward += reward
+        if done or e == frames - 1:
+            break
+    print("Total reward: {}".format(total_reward))
+
+def env_reset(env):
+    return env.my_preprocess_input(env.reset())
+
+def env_step(env, action):
+    n, r, d, i = env.step(action)
+    return env.my_preprocess_input(n), r, d, i
