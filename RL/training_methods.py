@@ -29,13 +29,16 @@ def train_discounted_rewards(env, agent, params, normalize_rewards):
         for i in reversed(range(len(replays))):
             reward = replays[i][3]
             # !!! reset the sum, since this was a game boundary (pong specific!)
-            if reward != 0: discounted_reward = 0
+            # if reward != 0: discounted_reward = 0
             discounted_reward = reward + discounted_reward * params.gamma
             episode_rewards[i] = discounted_reward
 
         if normalize_rewards:
             episode_rewards -= np.mean(episode_rewards)
-            episode_rewards /= np.std(episode_rewards)
+            std = np.std(episode_rewards)
+            if std != 0:
+            	episode_rewards /= std
+
 
         for i in range(len(replays)):
             frame, state, action, _, next_state = replays[i]
