@@ -1,5 +1,61 @@
+# jupyter notebook &
+# tensorboard --logdir="logs" &
+
 import numpy as np
+import math
 from scipy import stats
+
+class LearningParameters:
+    def __init__(self, env, episodes_count):
+        state = env_reset(env)
+
+        self.state_shape = state.shape
+        self.state_size = np.prod(self.state_shape)
+        self.action_size = env.action_space.n
+        self.episodes_count = episodes_count
+        self.max_frame_in_episode = env.spec.max_episode_steps
+        self.max_memory_size = 10000
+        self.episodes_between_think = 1
+        
+        self.gamma = 0.95                # discount rate
+        self.epsilon = 1.0               # exploration rate
+        self.epsilon_start = self.epsilon
+        self.epsilon_min = 0.0001        # min exploration rate
+        self.learning_rate = 0.1         # learning rate for algorithm
+        self.learning_rate_model = 0.01  # learning rate for model
+        
+        print("State shape {}, actions {}".format(self.state_shape, self.action_size))
+
+    def decay_exploration_rate(self, episode):
+        # Linear exploration rate decay (lerp)
+#         self.epsilon = self.epsilon_start - \
+#                       (self.epsilon_start - self.epsilon_min) * (float(frame) / self.frames_count)
+            
+        # Exponential rate decay
+        # y(0) = start
+        # y(1) = start * x
+        # y(2) = start * x^2
+        # y(steps) = start * x^steps = min => x = (min/start) ^ (1/steps)
+        # y(t) = start * x^t
+        self.epsilon = self.epsilon_start * \
+                       math.pow( math.pow(self.epsilon_min / self.epsilon_start, 1.0 / self.episodes_count), episode )
+
+def show(env, agent, params, frames, width, height, greedy=True):
+    state = env_reset(env)
+    img = plt.imshow(state.reshape(width, height))
+    frame = 0
+    for _ in range(frames):
+        img.set_data(state.reshape(width, height))
+        display.display(plt.gcf())
+        display.clear_output(wait=True)
+
+        action = agent.act_greedy(state, frame) if greedy else np.random.randint(0, params.action_size)
+        state, reward, done, _ = env_step(env, action)
+        if done:
+            state = env_reset(env)
+            frame = 0
+        else:
+            frame += 1
 
 def train_discounted_rewards(env, agent, params, normalize_rewards):
     rewards = []
@@ -48,7 +104,7 @@ def train_discounted_rewards(env, agent, params, normalize_rewards):
                 .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), len(replays), params.epsilon))
             
         if (episode + 1) % params.episodes_between_think == 0:
-            agent.think(32)
+            agent.think(32, episode)
         
         params.decay_exploration_rate(episode)
 
@@ -85,7 +141,7 @@ def train_reward_is_time(env, agent, params):
                 .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), len(replays), params.epsilon))
             
         if (episode + 1) % params.episodes_between_think == 0:
-            agent.think(32)
+            agent.think(32, episode)
         
         params.decay_exploration_rate(episode)
 
@@ -122,7 +178,7 @@ def train(env, agent, params):
                 .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), params.epsilon))
             
         if (episode + 1) % params.episodes_between_think == 0:
-            agent.think(32)
+            agent.think(32, episode)
         
         params.decay_exploration_rate(episode)
 
