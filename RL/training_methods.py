@@ -201,3 +201,20 @@ def env_reset(env):
 def env_step(env, action):
     n, r, d, i = env.step(action)
     return env.my_preprocess_input(n), r, d, i
+
+def preprocess_input_pong_v0(I):
+    I = I[35:195]
+    I[I == 144] = 0
+    I[I == 109] = 0
+    I = I[::2,::2,0] + I[1::2,::2,0] + I[::2,1::2,0] + I[1::2,1::2,0]
+    I = I[::2,::2] + I[1::2,::2] + I[::2,1::2] + I[1::2,1::2]
+    I = I[::2,::2] + I[1::2,::2] + I[::2,1::2] + I[1::2,1::2]
+    I[I != 0] = 1
+    I = I[0:19, 2:18]
+    return I.astype(np.float).ravel()
+
+def preprocess_input_breakout_v0(I):
+    I = I[35:195, 10:150]  # crop to (160, 140, 3)
+    I = (I[:,:,0] + I[:,:,1] + I[:,:,2]) / 3
+    I = I[::2,::2] + I[1::2,::2] + I[::2,1::2] + I[1::2,1::2]
+    return I.astype(np.float).ravel()
