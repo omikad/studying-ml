@@ -1,6 +1,8 @@
 # jupyter notebook &
 # tensorboard --logdir="logs" &
 
+# TODO: pass global step to optimizer
+
 import numpy as np
 import math
 from scipy import stats
