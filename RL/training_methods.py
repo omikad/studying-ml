@@ -5,6 +5,9 @@
 
 import numpy as np
 import math
+import matplotlib.pyplot as plt
+from IPython import display
+from JSAnimation.IPython_display import display_animation
 from scipy import stats
 
 class LearningParameters:
