@@ -19,7 +19,7 @@ class LearningParameters:
         self.action_size = env.action_space.n
         self.episodes_count = episodes_count
         self.max_frame_in_episode = env.spec.max_episode_steps
-        self.max_memory_size = 10000
+        self.max_memory_size = 100000
         self.episodes_between_think = 1
         
         self.gamma = 0.95                # discount rate
