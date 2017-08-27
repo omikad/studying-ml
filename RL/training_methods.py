@@ -73,6 +73,7 @@ def train_discounted_rewards(env, agent, params, normalize_rewards):
         
         for frame in range(params.max_frame_in_episode):
             action = agent.act(state, frame)
+
             next_state, reward, done, _ = env_step(env, action)
 
             total_reward += reward
@@ -90,7 +91,7 @@ def train_discounted_rewards(env, agent, params, normalize_rewards):
         for i in reversed(range(len(replays))):
             reward = replays[i][3]
             # !!!!!!!! reset the sum, since this was a game boundary (pong specific!)
-            # if reward != 0: discounted_reward = 0
+            if reward != 0: discounted_reward = 0.0
             discounted_reward = reward + discounted_reward * params.gamma
             episode_rewards[i] = discounted_reward
 
