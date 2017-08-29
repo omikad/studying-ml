@@ -6,14 +6,14 @@
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import os
+import tensorflow as tf
 from IPython import display
 from JSAnimation.IPython_display import display_animation
 from scipy import stats
 
 class LearningParameters:
-    def __init__(self, env, episodes_count):
-        state = env_reset(env)
-
+    def __init__(self, env, state, episodes_count):
         self.state_shape = state.shape
         self.state_size = np.prod(self.state_shape)
         self.action_size = env.action_space.n
@@ -45,36 +45,65 @@ class LearningParameters:
         self.epsilon = self.epsilon_start * \
                        math.pow( math.pow(self.epsilon_min / self.epsilon_start, 1.0 / self.episodes_count), episode )
 
-def show(env, agent, params, frames, width, height, greedy=True):
-    state = env_reset(env)
-    img = plt.imshow(state.reshape(width, height))
-    frame = 0
-    for _ in range(frames):
-        img.set_data(state.reshape(width, height))
-        display.display(plt.gcf())
-        display.clear_output(wait=True)
 
-        action = agent.act_greedy(state, frame) if greedy else np.random.randint(0, params.action_size)
-        state, reward, done, _ = env_step(env, action)
-        if done:
-            state = env_reset(env)
-            frame = 0
-        else:
-            frame += 1
+class TfSaver:
+    def __init__(self, logdir):
+        self.checkpoint_dir = os.path.join(logdir, "checkpoints")
+        self.checkpoint_path = os.path.join(self.checkpoint_dir, "model")
+        
+        if not os.path.exists(self.checkpoint_dir):
+            os.makedirs(self.checkpoint_dir)
+            
+        self.saver = tf.train.Saver()
+        
+    def load_latest_checkpoint(self, session):
+        latest_checkpoint = tf.train.latest_checkpoint(self.checkpoint_dir)
+        if latest_checkpoint:
+            print("Loading model checkpoint {}...\n".format(latest_checkpoint))
+            self.saver.restore(session, latest_checkpoint)
+            
+    def save_checkpoint(self, session):
+        self.saver.save(session, self.checkpoint_path)
 
-def train_discounted_rewards(env, agent, params, normalize_rewards):
+
+class EnvStateObserver:
+    def __init__(self, preprocess_input, concat_states_count):
+        self.preprocess_input = preprocess_input
+        self.concat_states_count = concat_states_count  # controls how many consecutive states will be analyzed by agent
+        self.slice_concat = None
+        self.state_dims = None
+        self.state = None
+
+    def env_reset(self, env):
+        state = self.preprocess_input(env.reset())
+        self.state_dims = len(state.shape)
+        self.state = np.stack([state] * self.concat_states_count, axis=self.state_dims)
+        if self.slice_concat is None:
+            self.slice_concat = [slice(None, None, 1)] * self.state_dims + [slice(1, None, 1)]
+        return self.state.ravel()   # Flatten input for simplicity
+
+    def env_step(self, env, action):
+        n, r, d, i = env.step(action)
+        next_state = self.preprocess_input(n)
+        next_state = np.append(self.state[self.slice_concat], np.expand_dims(next_state, self.state_dims), axis=self.state_dims)
+        self.state = next_state
+        return self.state.ravel(), r, d, i   # Flatten input for simplicity
+
+
+def train_discounted_rewards(session, saver, env, agent, env_state_observer, params, normalize_rewards):
     rewards = []
-    
+
     for episode in range(params.episodes_count):
-        state = env_reset(env)
+        state = env_state_observer.env_reset(env)
+
         total_reward = 0.0
         
         replays = []
         
         for frame in range(params.max_frame_in_episode):
-            action = agent.act(state, frame)
+            action = agent.act(session, state, frame)
 
-            next_state, reward, done, _ = env_step(env, action)
+            next_state, reward, done, _ = env_state_observer.env_step(env, action)
 
             total_reward += reward
     
@@ -90,8 +119,8 @@ def train_discounted_rewards(env, agent, params, normalize_rewards):
         discounted_reward = 0.0
         for i in reversed(range(len(replays))):
             reward = replays[i][3]
-            # !!!!!!!! reset the sum, since this was a game boundary (pong specific!)
-            if reward != 0: discounted_reward = 0.0
+            if params.pong_reset_discounted_reward and reward != 0:
+                discounted_reward = 0.0
             discounted_reward = reward + discounted_reward * params.gamma
             episode_rewards[i] = discounted_reward
 
@@ -99,7 +128,7 @@ def train_discounted_rewards(env, agent, params, normalize_rewards):
             episode_rewards -= np.mean(episode_rewards)
             std = np.std(episode_rewards)
             if std != 0:
-            	episode_rewards /= std
+                episode_rewards /= std
 
         for i in range(len(replays)):
             frame, state, action, _, next_state = replays[i]
@@ -110,12 +139,14 @@ def train_discounted_rewards(env, agent, params, normalize_rewards):
                 .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), len(replays), params.epsilon))
             
         if (episode + 1) % params.episodes_between_think == 0:
-            agent.think(32, episode)
+            agent.think(session, 32, episode)
+            saver.save_checkpoint(session)
         
         params.decay_exploration_rate(episode)
 
     return agent, rewards
 
+# TODO Fix:
 def train_reward_is_time(env, agent, params):
     """Ignore reward from the env, agent will be trained to increase total time played"""
     rewards = []
@@ -153,6 +184,7 @@ def train_reward_is_time(env, agent, params):
 
     return agent, rewards
 
+# TODO Fix:
 def train(env, agent, params):   
     rewards = []
     
@@ -190,23 +222,39 @@ def train(env, agent, params):
 
     return agent, rewards
 
-def evaluate(env, agent, params, frames):
-    state = env_reset(env)
+def show(session, env, agent, env_state_observer, params, frames, width, height, greedy=True):
+    size = width * height
+    state = env_state_observer.env_reset(env)
+    img = None
+    frame = 0
+    for i in range(frames):
+        state_img = state.reshape((width, height, env_state_observer.concat_states_count))[:,:,-1]
+        if i == 0:
+            img = plt.imshow(state_img)
+        else:
+            img.set_data(state_img)
+
+        display.display(plt.gcf())
+        display.clear_output(wait=True)
+
+        action = agent.act_greedy(session, state, frame) if greedy else np.random.randint(0, params.action_size)
+        state, reward, done, _ = env_state_observer.env_step(env, action)
+        if done:
+            state = env_state_observer.env_reset(env)
+            frame = 0
+        else:
+            frame += 1
+
+def evaluate(session, env, agent, env_state_observer, params, frames):
+    state = env_state_observer.env_reset(env)
     total_reward = 0
     for e in range(frames):
-        action = agent.act_greedy(state, e)
-        state, reward, done, _ = env_step(env, action)
+        action = agent.act_greedy(session, state, e)
+        state, reward, done, _ = env_state_observer.env_step(env, action)
         total_reward += reward
         if done or e == frames - 1:
             break
     print("Total reward: {}".format(total_reward))
-
-def env_reset(env):
-    return env.my_preprocess_input(env.reset())
-
-def env_step(env, action):
-    n, r, d, i = env.step(action)
-    return env.my_preprocess_input(n), r, d, i
 
 def preprocess_input_pong_v0(I):
     I = I[35:195]
@@ -217,7 +265,7 @@ def preprocess_input_pong_v0(I):
     I = I[::2,::2] + I[1::2,::2] + I[::2,1::2] + I[1::2,1::2]
     I[I != 0] = 1
     I = I[0:19, 2:18]
-    return I.astype(np.float).ravel()
+    return I.astype(np.float)
 
 def preprocess_input_breakout_v0(I):
     I = I[35:195, 10:150]  # crop to (160, 140, 3)
