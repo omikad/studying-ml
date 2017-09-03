@@ -80,14 +80,14 @@ class EnvStateObserver:
         self.state = np.stack([state] * self.concat_states_count, axis=self.state_dims)
         if self.slice_concat is None:
             self.slice_concat = [slice(None, None, 1)] * self.state_dims + [slice(1, None, 1)]
-        return self.state.ravel()   # Flatten input for simplicity
+        return self.state.ravel()
 
     def env_step(self, env, action):
         n, r, d, i = env.step(action)
         next_state = self.preprocess_input(n)
         next_state = np.append(self.state[self.slice_concat], np.expand_dims(next_state, self.state_dims), axis=self.state_dims)
         self.state = next_state
-        return self.state.ravel(), r, d, i   # Flatten input for simplicity
+        return self.state.ravel(), r, d, i
 
 
 def train_discounted_rewards(session, saver, env, agent, env_state_observer, params, normalize_rewards):
@@ -270,5 +270,6 @@ def preprocess_input_pong_v0(I):
 def preprocess_input_breakout_v0(I):
     I = I[35:195, 10:150]  # crop to (160, 140, 3)
     I = (I[:,:,0] + I[:,:,1] + I[:,:,2]) / 3
-    I = I[::2,::2] + I[1::2,::2] + I[::2,1::2] + I[1::2,1::2]
-    return I.astype(np.float).ravel()
+    I = np.maximum(np.maximum(np.maximum(I[::2,::2], I[1::2,::2]), I[::2,1::2]), I[1::2,1::2])
+    I = (I - 6.66) / 12.65
+    return I.astype(np.float)
