@@ -21,21 +21,21 @@ class LearningParameters:
         self.max_frame_in_episode = env.spec.max_episode_steps
         self.max_memory_size = 100000
         self.episodes_between_think = 1
-        
+
         self.gamma = 0.95                # discount rate
         self.epsilon = 1.0               # exploration rate
         self.epsilon_start = self.epsilon
         self.epsilon_min = 0.0001        # min exploration rate
         self.learning_rate = 0.1         # learning rate for algorithm
         self.learning_rate_model = 0.01  # learning rate for model
-        
+
         print("State shape {}, actions {}".format(self.state_shape, self.action_size))
 
     def decay_exploration_rate(self, episode):
         # Linear exploration rate decay (lerp)
 #         self.epsilon = self.epsilon_start - \
 #                       (self.epsilon_start - self.epsilon_min) * (float(frame) / self.frames_count)
-            
+
         # Exponential rate decay
         # y(0) = start
         # y(1) = start * x
@@ -50,18 +50,18 @@ class TfSaver:
     def __init__(self, logdir):
         self.checkpoint_dir = os.path.join(logdir, "checkpoints")
         self.checkpoint_path = os.path.join(self.checkpoint_dir, "model")
-        
+
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
-            
+
         self.saver = tf.train.Saver()
-        
+
     def load_latest_checkpoint(self, session):
         latest_checkpoint = tf.train.latest_checkpoint(self.checkpoint_dir)
         if latest_checkpoint:
             print("Loading model checkpoint {}...\n".format(latest_checkpoint))
             self.saver.restore(session, latest_checkpoint)
-            
+
     def save_checkpoint(self, session):
         self.saver.save(session, self.checkpoint_path)
 
@@ -97,16 +97,16 @@ def train_discounted_rewards(session, saver, env, agent, env_state_observer, par
         state = env_state_observer.env_reset(env)
 
         total_reward = 0.0
-        
+
         replays = []
-        
+
         for frame in range(params.max_frame_in_episode):
             action = agent.act(session, state, frame)
 
             next_state, reward, done, _ = env_state_observer.env_step(env, action)
 
             total_reward += reward
-    
+
             if done:
                 break
 
@@ -137,11 +137,11 @@ def train_discounted_rewards(session, saver, env, agent, env_state_observer, par
         if (episode + 1) % max(1, (params.episodes_count / 20)) == 0:
             print("episode: {}/{}, reward {}, frames {}, exploration rate: {:.2}"
                 .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), len(replays), params.epsilon))
-            
+
         if (episode + 1) % params.episodes_between_think == 0:
             agent.think(session, 32, episode)
             saver.save_checkpoint(session)
-        
+
         params.decay_exploration_rate(episode)
 
     return agent, rewards
@@ -150,12 +150,12 @@ def train_discounted_rewards(session, saver, env, agent, env_state_observer, par
 def train_reward_is_time(env, agent, params):
     """Ignore reward from the env, agent will be trained to increase total time played"""
     rewards = []
-    
+
     for episode in range(params.episodes_count):
         state = env_reset(env)
-        
+
         replays = []
-        
+
         for frame in range(params.max_frame_in_episode):
             action = agent.act(state, frame)
             next_state, _, done, _ = env_step(env, action)
@@ -165,59 +165,59 @@ def train_reward_is_time(env, agent, params):
 
             replays.append((state, action, next_state))
             state = next_state
-            
+
         rewards.append(len(replays))
-        
+
         for frame, replay in enumerate(replays):
             state, action, next_state = replay
             reward_value = len(replays) - frame
             agent.remember(state, action, reward_value, next_state, frame)
-            
+
         if (episode + 1) % max(1, (params.episodes_count / 20)) == 0:
             print("episode: {}/{}, reward {}, frames {}, exploration rate: {:.2}"
                 .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), len(replays), params.epsilon))
-            
+
         if (episode + 1) % params.episodes_between_think == 0:
             agent.think(32, episode)
-        
+
         params.decay_exploration_rate(episode)
 
     return agent, rewards
 
 # TODO Fix:
-def train(env, agent, params):   
+def train(env, agent, params):
     rewards = []
-    
+
     for episode in range(params.episodes_count):
         state = env_reset(env)
         total_reward = 0.0
-        
+
         for frame in range(params.max_frame_in_episode):
             action = agent.act(state, frame)
             next_state, reward, done, _ = env_step(env, action)
-    
+
             total_reward += reward
-    
+
             if done:
                 reward = -10
-    
+
             if frame < env.spec.max_episode_steps:
                 agent.remember(state, action, reward, next_state, frame)
-                
+
             state = next_state
-            
+
             if done:
                 break
-        
+
         rewards.append(total_reward)
-            
+
         if (episode + 1) % max(1, (params.episodes_count / 20)) == 0:
             print("episode: {}/{}, reward {}, exploration rate: {:.2}"
                 .format(episode + 1, params.episodes_count, np.mean(rewards[-10:]), params.epsilon))
-            
+
         if (episode + 1) % params.episodes_between_think == 0:
             agent.think(32, episode)
-        
+
         params.decay_exploration_rate(episode)
 
     return agent, rewards
