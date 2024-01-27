@@ -11,6 +11,9 @@ class HashableState:
         board = self.board
         return 1 - board[0, :, 0] - board[0, :, 1]
 
+    def flip_horizontally(self):
+        return HashableState(self.board[:, ::-1, :].copy(), self.player_idx)
+
     def __eq__(self, another):
         return self.board.shape == another.board.shape \
             and np.allclose(self.board, another.board) \
