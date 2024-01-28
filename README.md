@@ -8,6 +8,8 @@ Welcome to my GitHub repository, where I delve into the fascinating world of Mac
 
 This repository is not well organized, however here is a quick overview:
 
+* AlphaGo Zero implementation, plays Connect Four game: [AlphaGo Zero implementation](https://github.com/omikad/studying-ml/tree/master/AlphaGoZero)
+
 * Reinforcement Learning (RL): Inspired by Richard S. Sutton's seminal book, this section covers my implementations and experiments with RL algorithms. [Jump to RL Section](https://github.com/omikad/studying-ml/tree/master/SuttonBook)
 
 * Art Style Transfer: an old algorithm from 2016, the first hint of what machine can do with the Art [Jump to Art Style Transfer](https://github.com/omikad/studying-ml/tree/master/Art%20Style%20Transfer)
