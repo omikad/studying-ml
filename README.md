@@ -8,7 +8,7 @@ Welcome to my GitHub repository, where I delve into the fascinating world of Mac
 
 This repository is not well organized, however here is a quick overview:
 
-* AlphaGo Zero implementation, plays Connect Four game: [AlphaGo Zero implementation](https://github.com/omikad/studying-ml/tree/master/AlphaGoZero)
+* AlphaGo Zero implementation, plays Connect Four game: [AlphaGo Zero implementation](https://github.com/omikad/studying-ml/tree/master/AlphaZero/alphagozero_connectfour.ipynb)
 
 * Reinforcement Learning (RL): Inspired by Richard S. Sutton's seminal book, this section covers my implementations and experiments with RL algorithms. [Jump to RL Section](https://github.com/omikad/studying-ml/tree/master/SuttonBook)
 
