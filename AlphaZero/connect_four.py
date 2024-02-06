@@ -108,7 +108,10 @@ class ConnectFour:
         return self.state, self.action_mask
 
     def render_ascii(self):
-        board = self.state.board
+        ConnectFour.render_board_ascii(self.state.board)
+
+    @staticmethod
+    def render_board_ascii(board):
         for ri in range(board.shape[0]):
             print(''.join([
                 ('0' if board[ri, ci, 0] == 1 else '1' if board[ri, ci, 1] == 1 else '.')
