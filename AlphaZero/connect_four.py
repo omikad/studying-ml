@@ -80,7 +80,11 @@ class ConnectFour:
         board, player_idx = self.state.board, self.state.player_idx
 
         assert self.done == False
-        assert self.action_mask[action] == 1
+
+        if self.action_mask[action] == 0:
+            print(f"Player {player_idx}, action {action}, mask {self.action_mask}")
+            self.render_board_ascii(board)
+            raise Exception(f"Illegal move")
 
         ri = self.rows - 1
         while board[ri, action, 0] + board[ri, action, 1] > 0 and ri >= 0:
